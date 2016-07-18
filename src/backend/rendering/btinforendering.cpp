@@ -21,7 +21,7 @@
 
 
 using namespace Rendering;
-using namespace sword;
+using namespace swordxx;
 
 namespace Rendering {
 
@@ -275,13 +275,13 @@ QString decodeCrossReference(QString const & data, BtConstModuleList const & mod
     );
 
     if (module && (module->type() == CSwordModuleInfo::Bible)) {
-        sword::VerseKey vk;
-        sword::ListKey refs = vk.parseVerseList((const char*) data.mid((pos == -1) ? 0 : pos + 1).toUtf8(), "Gen 1:1", true);
+        swordxx::VerseKey vk;
+        swordxx::ListKey refs = vk.parseVerseList((const char*) data.mid((pos == -1) ? 0 : pos + 1).toUtf8(), "Gen 1:1", true);
 
         for (int i = 0; i < refs.getCount(); i++) {
-            sword::SWKey * const key = refs.getElement(i);
+            swordxx::SWKey * const key = refs.getElement(i);
             BT_ASSERT(key);
-            sword::VerseKey * const vk = dynamic_cast<sword::VerseKey*>(key);
+            swordxx::VerseKey * const vk = dynamic_cast<swordxx::VerseKey*>(key);
 
             if (vk && vk->isBoundSet()) { // render a range of keys
                 tree.append(new CTextRendering::KeyTreeItem(
@@ -358,7 +358,7 @@ QString decodeFootnote(QString const & data) {
     text = QString::fromUtf8(m.renderText(
                                  module->isUnicode()
                                  ? static_cast<const char *>(text.toUtf8())
-                                 : static_cast<const char *>(text.toLatin1())));
+                                 : static_cast<const char *>(text.toLatin1())).c_str());
 
     return QString("<div class=\"footnoteinfo\" lang=\"%1\"><h3>%2</h3><p>%3</p></div>")
            .arg(module->language()->abbrev())

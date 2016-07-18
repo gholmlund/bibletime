@@ -13,18 +13,16 @@
 #include <QString>
 #include <QTextCodec>
 #include <QUrl>
+#include <swordxx/keys/versekey.h>
+#include <swordxx/swmodule.h>
+#include <swordxx/utilstr.h>
+#include <swordxx/utilxml.h>
 #include "../../util/btassert.h"
 #include "../config/btconfig.h"
 #include "../drivers/cswordmoduleinfo.h"
 #include "../managers/clanguagemgr.h"
 #include "../managers/cswordbackend.h"
 #include "../managers/referencemanager.h"
-
-// Sword includes:
-#include <swmodule.h>
-#include <utilstr.h>
-#include <utilxml.h>
-#include <versekey.h>
 
 
 namespace Filters {
@@ -43,10 +41,10 @@ ThmlToHtml::ThmlToHtml() {
     removeTokenSubstitute("/note");
 }
 
-char ThmlToHtml::processText(sword::SWBuf &buf, const sword::SWKey *key,
-                             const sword::SWModule *module)
+char ThmlToHtml::processText(std::string &buf, const swordxx::SWKey *key,
+                             const swordxx::SWModule *module)
 {
-    sword::ThMLHTML::processText(buf, key, module);
+    swordxx::ThMLHTML::processText(buf, key, module);
 
     CSwordModuleInfo* m = CSwordBackend::instance()->findModuleByName( module->getName() );
 
@@ -193,48 +191,53 @@ char ThmlToHtml::processText(sword::SWBuf &buf, const sword::SWKey *key,
     }
 
     if (list.count())
-        buf = result.toUtf8();
+        buf = result.toUtf8().constData();
 
     return 1;
 }
 
 
-bool ThmlToHtml::handleToken(sword::SWBuf &buf, const char *token,
-                             sword::BasicFilterUserData *userData)
+bool ThmlToHtml::handleToken(std::string &buf, const char *token,
+                             swordxx::BasicFilterUserData *userData)
 {
     if (!substituteToken(buf, token) && !substituteEscapeString(buf, token)) {
-        sword::XMLTag const tag(token);
+        swordxx::XMLTag const tag(token);
         BT_ASSERT(dynamic_cast<UserData *>(userData));
         UserData * const myUserData = static_cast<UserData *>(userData);
         // Hack to be able to call stuff like Lang():
-        sword::SWModule const * const myModule =
-                const_cast<sword::SWModule *>(myUserData->module);
+        swordxx::SWModule const * const myModule =
+                const_cast<swordxx::SWModule *>(myUserData->module);
         char const * const tagName = tag.getName();
         if (!tagName) // unknown tag, pass through:
-            return sword::ThMLHTML::handleToken(buf, token, userData);
-        if (!sword::stricmp(tagName, "foreign")) {
+            return swordxx::ThMLHTML::handleToken(buf, token, userData);
+        if (!swordxx::stricmp(tagName, "foreign")) {
             // A text part in another language, we have to set the right font
-
-            if (const char * const tagLang = tag.getAttribute("lang"))
+            auto tagLang(tag.getAttribute("lang"));
+            if (!tagLang.empty())
                 buf.append("<span class=\"foreign\" lang=\"")
                    .append(tagLang)
                    .append("\">");
-        } else if (!sword::stricmp(tagName, "sync")) {
+        } else if (!swordxx::stricmp(tagName, "sync")) {
             // If Morph or Strong or Lemma:
-            if (const char * const tagType = tag.getAttribute("type"))
-                if (!sword::stricmp(tagType, "morph")
-                    || !sword::stricmp(tagType, "Strongs")
-                    || !sword::stricmp(tagType, "lemma"))
-                    buf.append('<').append(token).append('>');
-        } else if (!sword::stricmp(tagName, "note")) { // <note> tag
+            auto tagType(tag.getAttribute("type"));
+            if (!tagType.empty())
+                if (!swordxx::stricmp(tagType.c_str(), "morph")
+                    || !swordxx::stricmp(tagType.c_str(), "Strongs")
+                    || !swordxx::stricmp(tagType.c_str(), "lemma"))
+                {
+                    buf.push_back('<');
+                    buf.append(token);
+                    buf.push_back('>');
+                }
+        } else if (!swordxx::stricmp(tagName, "note")) { // <note> tag
             if (!tag.isEmpty()) {
                 if (!tag.isEndTag()) {
                     buf.append(" <span class=\"footnote\" note=\"")
-                       .append(myModule->getName())
-                       .append('/')
-                       .append(myUserData->key->getShortText())
-                       .append('/')
-                       .append(QString::number(myUserData->swordFootnote).toUtf8().constData())
+                       .append(myModule->getName());
+                    buf.push_back('/');
+                    buf.append(myUserData->key->getShortText());
+                    buf.push_back('/');
+                    buf.append(QString::number(myUserData->swordFootnote).toUtf8().constData())
                        .append("\">*</span> ");
 
                     myUserData->swordFootnote++;
@@ -246,7 +249,7 @@ bool ThmlToHtml::handleToken(sword::SWBuf &buf, const char *token,
                     myUserData->inFootnoteTag = false;
                 }
             }
-        } else if (!sword::stricmp(tagName, "scripRef")) { // a scripRef
+        } else if (!swordxx::stricmp(tagName, "scripRef")) { // a scripRef
             // scrip refs which are embeded in footnotes may not be displayed!
 
             if (!myUserData->inFootnoteTag) {
@@ -309,7 +312,7 @@ bool ThmlToHtml::handleToken(sword::SWBuf &buf, const char *token,
                         }
                         myUserData->suspendTextPassThru = false;
                     }
-                } else if (tag.getAttribute("passage") ) {
+                } else if (!tag.getAttribute("passage").empty()) {
                     // The passage was given as a parameter value
                     myUserData->inscriptRef = true;
                     myUserData->suspendTextPassThru = false;
@@ -319,11 +322,11 @@ bool ThmlToHtml::handleToken(sword::SWBuf &buf, const char *token,
                                     "standardBible"))
                     {
                         ;
-                        BT_ASSERT(tag.getAttribute("passage"));
+                        BT_ASSERT(!tag.getAttribute("passage").empty());
                         QString const completeRef(
                                 ReferenceManager::parseVerseReference(
                                     QString::fromUtf8(
-                                            tag.getAttribute("passage")),
+                                            tag.getAttribute("passage").c_str()),
                                     ReferenceManager::ParseOptions(
                                         mod->name(),
                                         QString::fromUtf8(
@@ -352,21 +355,24 @@ bool ThmlToHtml::handleToken(sword::SWBuf &buf, const char *token,
                     myUserData->suspendTextPassThru = true;
                 }
             }
-        } else if (!sword::stricmp(tagName, "div")) {
+        } else if (!swordxx::stricmp(tagName, "div")) {
             if (tag.isEndTag()) {
                 buf.append("</div>");
-            } else if (char const * const tagClass = tag.getAttribute("class")){
-                if (!sword::stricmp(tagClass, "sechead") ) {
-                    buf.append("<div class=\"sectiontitle\">");
-                } else if (!sword::stricmp(tagClass, "title")) {
-                    buf.append("<div class=\"booktitle\">");
+            } else {
+                auto tagClass(tag.getAttribute("class"));
+                if (!tagClass.empty()) {
+                    if (!swordxx::stricmp(tagClass.c_str(), "sechead") ) {
+                        buf.append("<div class=\"sectiontitle\">");
+                    } else if (!swordxx::stricmp(tagClass.c_str(), "title")) {
+                        buf.append("<div class=\"booktitle\">");
+                    }
                 }
             }
-        } else if (!sword::stricmp(tagName, "img") && tag.getAttribute("src")) {
-            const char * value = tag.getAttribute("src");
+        } else if (!swordxx::stricmp(tagName, "img") && !tag.getAttribute("src").empty()) {
+            auto value(tag.getAttribute("src"));
 
             if (value[0] == '/')
-                value++; //strip the first /
+                value.erase(0u, 1u); //strip the first /
 
             buf.append("<img src=\"")
                .append(
@@ -374,11 +380,11 @@ bool ThmlToHtml::handleToken(sword::SWBuf &buf, const char *token,
                         QTextCodec::codecForLocale()->toUnicode(
                             myUserData->module->getConfigEntry(
                                 "AbsoluteDataPath")
-                        ).append('/').append(QString::fromUtf8(value))
+                        ).append('/').append(QString::fromUtf8(value.c_str()))
                     ).toString().toUtf8().constData())
                .append("\" />");
         } else { // Let unknown token pass thru:
-            return sword::ThMLHTML::handleToken(buf, token, userData);
+            return swordxx::ThMLHTML::handleToken(buf, token, userData);
         }
     }
     return true;

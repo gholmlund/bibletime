@@ -12,22 +12,22 @@
 #ifndef BTSTRINGMGR_H
 #define BTSTRINGMGR_H
 
-#include <stringmgr.h>
+#include <swordxx/stringmgr.h>
 
 
 /**
   Unicode string manager implementation.
 
-  A Qt-based sword::StringMgr is better than the default one in Sword, in case
-  Sword is not compiled against ICU regarding this. However, we have no good
+  A Qt-based swordxx::StringMgr is better than the default one in Sword++, in case
+  Sword++ is not compiled against ICU regarding this. However, we have no good
   means to check this at compile time, hence we provide this class. It is
   initialized in BibleTime::initBackends() as follows:
   \code{.cpp}
-  if (!sword::SWMgr::isICU)
-      sword::StringMgr::setSystemStringMgr(new BtStringMgr());
+  if (!swordxx::SWMgr::isICU)
+      swordxx::StringMgr::setSystemStringMgr(new BtStringMgr());
   \endcode
 */
-class BtStringMgr : public sword::StringMgr {
+class BtStringMgr : public swordxx::StringMgr {
 
     public:
 

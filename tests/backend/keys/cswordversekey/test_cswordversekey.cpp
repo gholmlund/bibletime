@@ -2,7 +2,6 @@
 #include <QtTest/QtTest>
 #include <QSignalSpy>
 #include <qdebug.h>
-#include <swbuf.h>
 #include "test_cswordversekey.h"
 #include "backend/managers/cswordbackend.h"
 #include "backend/keys/cswordkey.h"

@@ -14,28 +14,27 @@
 
 #include "cswordkey.h"
 
-// Sword includes:
-#include <treekeyidx.h>
+#include <swordxx/keys/treekeyidx.h>
 
 
 class CSwordModuleInfo;
 
-/** BibleTime's implementation of Sword's TreeKeyIdx class.
- * @short CSwordKey implementation for Sword's TreeKey
+/** BibleTime's implementation of Sword++'s TreeKeyIdx class.
+ * @short CSwordKey implementation for Sword++'s TreeKey
  * @author The BibleTime team
  */
 
-class CSwordTreeKey : public CSwordKey, public sword::TreeKeyIdx {
+class CSwordTreeKey : public CSwordKey, public swordxx::TreeKeyIdx {
 
     public:
 
         CSwordTreeKey & operator=(CSwordTreeKey const &) = delete;
 
         /**
-          \param k The Sword tree key which belongs to this key
+          \param k The Sword++ tree key which belongs to this key
           \param module The module which belongs to this key
          */
-        CSwordTreeKey(const sword::TreeKeyIdx *k,
+        CSwordTreeKey(const swordxx::TreeKeyIdx *k,
                       const CSwordModuleInfo *module);
 
         CSwordTreeKey( const CSwordTreeKey& k );

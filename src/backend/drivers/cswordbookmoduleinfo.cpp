@@ -9,27 +9,25 @@
 
 #include "cswordbookmoduleinfo.h"
 
+#include <swordxx/keys/treekey.h>
+#include <swordxx/keys/treekeyidx.h>
 #include "../../util/btassert.h"
 #include "../keys/cswordtreekey.h"
 
-// Sword includes:
-#include <treekey.h>
-#include <treekeyidx.h>
 
-
-CSwordBookModuleInfo::CSwordBookModuleInfo(sword::SWModule & module,
+CSwordBookModuleInfo::CSwordBookModuleInfo(swordxx::SWModule & module,
                                            CSwordBackend & backend)
     : CSwordModuleInfo(module, backend, CSwordModuleInfo::GenericBook)
     , m_depth(-1)
 {
-    sword::TreeKeyIdx *key = tree();
+    swordxx::TreeKeyIdx *key = tree();
     if (key) {
         key->root();
         computeDepth(key, 0);
     }
 }
 
-void CSwordBookModuleInfo::computeDepth(sword::TreeKeyIdx * const key,
+void CSwordBookModuleInfo::computeDepth(swordxx::TreeKeyIdx * const key,
                                         const int level)
 {
     const QByteArray savedKey(key->getText());
@@ -47,9 +45,9 @@ void CSwordBookModuleInfo::computeDepth(sword::TreeKeyIdx * const key,
 }
 
 /** Returns a treekey filled with the structure of this module */
-sword::TreeKeyIdx* CSwordBookModuleInfo::tree() const {
-    sword::TreeKeyIdx * const treeKey =
-            dynamic_cast<sword::TreeKeyIdx *>(module().getKey());
+swordxx::TreeKeyIdx* CSwordBookModuleInfo::tree() const {
+    swordxx::TreeKeyIdx * const treeKey =
+            dynamic_cast<swordxx::TreeKeyIdx *>(module().getKey());
     BT_ASSERT(treeKey);
     return treeKey;
 }

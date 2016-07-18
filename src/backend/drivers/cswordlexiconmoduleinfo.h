@@ -18,13 +18,13 @@
 
 
 /**
-  The implementation of CModuleInfo for the Sword lexiccons and citionaries.
+  The implementation of CModuleInfo for the Sword++ lexiccons and citionaries.
 */
 class CSwordLexiconModuleInfo: public CSwordModuleInfo {
         Q_OBJECT
 
     public: /* Methods: */
-        inline CSwordLexiconModuleInfo(sword::SWModule & module,
+        inline CSwordLexiconModuleInfo(swordxx::SWModule & module,
                                        CSwordBackend & backend)
                 : CSwordModuleInfo(module, backend, Lexicon) {}
 
@@ -42,7 +42,8 @@ class CSwordLexiconModuleInfo: public CSwordModuleInfo {
           Jumps to the closest entry in the module.
         */
         inline bool snap() const override {
-            return module().getRawEntry();
+            module().getRawEntry();
+            return true;
         }
 
     private: /* Fields: */

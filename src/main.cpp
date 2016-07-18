@@ -259,7 +259,7 @@ int main(int argc, char* argv[]) {
     }
 
 #ifdef Q_OS_WIN
-    // change directory to the Sword or .sword directory in the $HOME dir so that
+    // change directory to the Sword or .swordxx directory in the $HOME dir so that
     // the sword.conf is found. It points to the sword/locales.d directory
     QString homeSwordDir = util::directory::getUserHomeDir().absolutePath();
     QDir dir;

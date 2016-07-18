@@ -15,6 +15,11 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <swordxx/swmgr.h>
+#include <swordxx/swmodule.h>
+#include <swordxx/version.h>
+#include <swordxx/localemgr.h>
+#include <swordxx/utilstr.h>
 #include "../../util/btassert.h"
 #include "../drivers/cswordmoduleinfo.h"
 #include "../drivers/btconstmoduleset.h"
@@ -28,26 +33,18 @@
 #include "../rendering/cchapterdisplay.h"
 #include "../rendering/centrydisplay.h"
 
-// Sword includes:
-#include <swmgr.h>
-#include <swbuf.h>
-#include <swmodule.h>
-#include <swversion.h>
-#include <localemgr.h>
-#include <utilstr.h>
-
 /**
-  \brief The backend layer main class, a backend implementation of Sword.
+  \brief The backend layer main class, a backend implementation of Sword++.
 
-  This is the implementation of CBackend for Sword. It's additionally derived
-  from SWMgr to provide functions of Sword.
+  This is the implementation of CBackend for Sword++. It's additionally derived
+  from SWMgr to provide functions of Sword++.
 
   \note Mostly, only one instance of this class is used. This instance is
         created by BibleTime::initBackends() and is destroyed by
         BibleTimeApp::~BibleTimeApp(). Only when \ref BackendNotSingleton
         "managing modules" separate backends are created.
 */
-class CSwordBackend: public QObject, public sword::SWMgr {
+class CSwordBackend: public QObject, public swordxx::SWMgr {
 
     Q_OBJECT
 
@@ -82,7 +79,7 @@ public: /* Methods: */
       \note Using augmentHome=false can mess up the system because it is true
             elsewhere.
       \param[in] path The path which is used to load modules.
-      \param[in] augmentHome Whether $HOME/.sword/ modules should be augmented
+      \param[in] augmentHome Whether $HOME/.swordxx/ modules should be augmented
                              with the other modules.
     */
     CSwordBackend(const QString & path, const bool augmentHome = true);
@@ -120,7 +117,7 @@ public: /* Methods: */
     }
 
     /**
-      \brief Initializes the Sword modules.
+      \brief Initializes the Sword++ modules.
       \returns whether the initializiation was successful.
     */
     CSwordBackend::LoadError initModules(const SetupChangedReason reason);
@@ -141,9 +138,9 @@ public: /* Methods: */
     void setFilterOptions(const FilterOptions & options);
 
     /**
-      \brief Sets the language for the international booknames of Sword.
+      \brief Sets the language for the international booknames of Sword++.
       \param[in] langName The abbreviation string which should be used for the
-                          Sword backend.
+                          Sword++ backend.
     */
     const QString booknameLanguage(const QString & langName = QString::null);
 
@@ -162,17 +159,17 @@ public: /* Methods: */
     CSwordModuleInfo * findModuleByName(const QString & name) const;
 
     /**
-      \brief Searches for a module with the given sword module as module().
+      \brief Searches for a module with the given Sword++ module as module().
       \param[in] swmodule The SWModule of the desired module.
       \returns a pointer to the desired module or NULL if not found.
     */
-    CSwordModuleInfo * findSwordModuleByPointer(const sword::SWModule * const swmodule) const;
+    CSwordModuleInfo * findSwordModuleByPointer(const swordxx::SWModule * const swmodule) const;
 
     /**
       \returns The global config object containing the configs of all modules
                merged together.
     */
-    inline sword::SWConfig * getConfig() const {
+    inline swordxx::SWConfig * getConfig() const {
         return config;
     }
 
@@ -195,7 +192,7 @@ public: /* Methods: */
     static QString translatedOptionName(const CSwordModuleInfo::FilterTypes option);
 
     /**
-      \brief Reloads all Sword modules.
+      \brief Reloads all Sword++ modules.
       \param[in] reason The reason for the reload.
     */
     void reloadModules(const SetupChangedReason reason);
@@ -221,8 +218,8 @@ public: /* Methods: */
     BtConstModuleList getConstPointerList(const QStringList & names) const;
 
     /**
-      \brief Sword prefix list.
-      \returns A list of all known Sword prefix dirs
+      \brief Sword++ prefix list.
+      \returns A list of all known Sword++ prefix dirs
     */
     QStringList swordDirList() const;
 
@@ -245,9 +242,9 @@ protected: /* Methods: */
     */
     CSwordBackend();
 
-    /** Reimplemented from sword::SWMgr. */
-    void AddRenderFilters(sword::SWModule * module,
-                          sword::ConfigEntMap & section) override;
+    /** Reimplemented from swordxx::SWMgr. */
+    void AddRenderFilters(swordxx::SWModule * module,
+                          swordxx::ConfigEntMap & section) override;
 
     QStringList getSharedSwordConfigFiles() const;
     QString getPrivateSwordConfigPath() const;

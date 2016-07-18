@@ -61,7 +61,7 @@ class CModuleResultView : public QTreeWidget {
 
 
         void setupStrongsResults(const CSwordModuleInfo *module,
-                                 const sword::ListKey &results,
+                                 const swordxx::ListKey &results,
                                  QTreeWidgetItem *parent,
                                  const QString &searchedText);
 
@@ -96,7 +96,7 @@ class CModuleResultView : public QTreeWidget {
         void saveResult();
 
     signals:
-        void moduleSelected(const CSwordModuleInfo*, const sword::ListKey&);
+        void moduleSelected(const CSwordModuleInfo*, const swordxx::ListKey&);
         void moduleChanged();
         void strongsSelected(CSwordModuleInfo*, const QStringList&);
 

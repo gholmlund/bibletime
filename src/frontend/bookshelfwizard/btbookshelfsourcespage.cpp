@@ -200,7 +200,7 @@ void BtBookshelfSourcesPage::slotButtonClicked(int row) {
         selectSourcesInModel(saveSources);
         return;
     }
-    sword::InstallSource newSource = dlg.getSource();
+    swordxx::InstallSource newSource = dlg.getSource();
     if (*(newSource.type.c_str()) != '\0') // we have a valid source to add
         BtInstallBackend::addSource(newSource);
     updateSourcesModel();

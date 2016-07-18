@@ -110,7 +110,7 @@ void CLanguageMgr::init() {
     if (m_langMap.count() > 0) return;
 
     // Developers: It's easy to get a list of used language codes from all modules:
-    // Refresh all sources; go to .sword/InstallMgr/; run:
+    // Refresh all sources; go to .swordxx/InstallMgr/; run:
     // grep -R -hs Lang= *|cut -c 6-|sort|uniq
     // Don't remove unused languages from the source code unless you know it won't be used
     // anymore.in any module ever.

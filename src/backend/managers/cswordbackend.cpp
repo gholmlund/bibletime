@@ -15,6 +15,12 @@
 #include <QSet>
 #include <QString>
 #include <QTextCodec>
+#include <swordxx/encfiltmgr.h>
+#include <swordxx/filemgr.h>
+#include <swordxx/filters/rtfhtml.h>
+#include <swordxx/swfiltermgr.h>
+#include <swordxx/swfilter.h>
+#include <swordxx/utilstr.h>
 #include "../../util/directory.h"
 #include "../btglobal.h"
 #include "../btinstallmgr.h"
@@ -24,29 +30,21 @@
 #include "../drivers/cswordcommentarymoduleinfo.h"
 #include "../drivers/cswordlexiconmoduleinfo.h"
 
-// Sword includes:
-#include <encfiltmgr.h>
-#include <filemgr.h>
-#include <rtfhtml.h>
-#include <swfiltermgr.h>
-#include <swfilter.h>
-#include <utilstr.h>
-
 
 using namespace Rendering;
 
 CSwordBackend * CSwordBackend::m_instance = nullptr;
 
 CSwordBackend::CSwordBackend()
-        : sword::SWMgr(nullptr, nullptr, false,
-                       new sword::EncodingFilterMgr(sword::ENC_UTF8), true)
+        : swordxx::SWMgr(nullptr, nullptr, false,
+                         new swordxx::EncodingFilterMgr(swordxx::ENC_UTF8), true)
         , m_dataModel(this)
 {}
 
 CSwordBackend::CSwordBackend(const QString & path, const bool augmentHome)
-        : sword::SWMgr(!path.isEmpty() ? path.toLocal8Bit().constData() : nullptr,
-                       false, new sword::EncodingFilterMgr(sword::ENC_UTF8),
-                       false, augmentHome)
+        : swordxx::SWMgr(!path.isEmpty() ? path.toLocal8Bit().constData() : nullptr,
+                         false, new swordxx::EncodingFilterMgr(swordxx::ENC_UTF8),
+                         false, augmentHome)
 {}
 
 CSwordBackend::~CSwordBackend() {
@@ -69,9 +67,9 @@ void CSwordBackend::uninstallModules(BtConstModuleSet const & toBeDeleted) {
     emit sigSwordSetupChanged(RemovedModules);
 
     BtInstallMgr installMgr;
-    QMap<QString, sword::SWMgr *> mgrDict; // Maps config paths to SWMgr objects
+    QMap<QString, swordxx::SWMgr *> mgrDict; // Maps config paths to SWMgr objects
     for (CSwordModuleInfo const * const mInfo : toBeDeleted) {
-        // Find the install path for the sword manager:
+        // Find the install path for the Sword++ manager:
         QString dataPath = mInfo->config(CSwordModuleInfo::DataPath);
         if (dataPath.left(2) == "./")
             dataPath = dataPath.mid(2);
@@ -90,11 +88,11 @@ void CSwordBackend::uninstallModules(BtConstModuleSet const & toBeDeleted) {
             continue; // don't remove this, go to next of the for loop
         }
 
-        // Create the sword manager and remove the module
-        sword::SWMgr * mgr = mgrDict[prefixPath];
+        // Create the Sword++ manager and remove the module
+        swordxx::SWMgr * mgr = mgrDict[prefixPath];
         if (!mgr) { // Create new mgr if it's not yet available
             mgrDict.insert(prefixPath,
-                           new sword::SWMgr(prefixPath.toLocal8Bit()));
+                           new swordxx::SWMgr(prefixPath.toLocal8Bit()));
             mgr = mgrDict[prefixPath];
         }
         qDebug() << "Removing the module" << mInfo->name() << "...";
@@ -127,11 +125,11 @@ CSwordBackend::LoadError CSwordBackend::initModules(const SetupChangedReason rea
     shutdownModules(); // Remove previous modules
     m_dataModel.clear();
 
-    sword::ModMap::iterator end = Modules.end();
+    swordxx::ModMap::iterator end = Modules.end();
     const LoadError ret = static_cast<LoadError>(Load());
 
-    for (sword::ModMap::iterator it = Modules.begin(); it != end; ++it) {
-        sword::SWModule * const curMod = it->second;
+    for (swordxx::ModMap::iterator it = Modules.begin(); it != end; ++it) {
+        swordxx::SWModule * const curMod = it->second;
         BT_ASSERT(curMod);
         CSwordModuleInfo * newModule;
 
@@ -155,7 +153,7 @@ CSwordBackend::LoadError CSwordBackend::initModules(const SetupChangedReason rea
         // Append the new modules to our list, but only if it's supported
         // The constructor of CSwordModuleInfo prints a warning on stdout
         if (!newModule->hasVersion()
-            || (newModule->minimumSwordVersion() <= sword::SWVersion::currentVersion))
+            || (newModule->minimumSwordxxVersion() <= swordxx::swordCompatVersion()))
         {
             m_dataModel.addModule(newModule);
         } else {
@@ -177,10 +175,10 @@ CSwordBackend::LoadError CSwordBackend::initModules(const SetupChangedReason rea
     return ret;
 }
 
-void CSwordBackend::AddRenderFilters(sword::SWModule * module,
-                                     sword::ConfigEntMap & section)
+void CSwordBackend::AddRenderFilters(swordxx::SWModule * module,
+                                     swordxx::ConfigEntMap & section)
 {
-    sword::ConfigEntMap::const_iterator entry = section.find("SourceType");
+    swordxx::ConfigEntMap::const_iterator entry = section.find("SourceType");
     if (entry != section.end()) {
         if (entry->second == "OSIS") {
             module->addRenderFilter(&m_osisFilter);
@@ -216,7 +214,7 @@ void CSwordBackend::shutdownModules() {
      * modules. If these modules are removed, the filters need to be removed as well,
      * so that they are re-created for the new module objects.
      */
-    using FMCI = sword::FilterMap::const_iterator;
+    using FMCI = swordxx::FilterMap::const_iterator;
     for (FMCI it = cipherFilters.begin(); it != cipherFilters.end(); ++it) {
         //Delete the Filter and remove it from the cleanup list
         cleanupFilters.remove(it->second);
@@ -279,7 +277,7 @@ CSwordModuleInfo * CSwordBackend::findModuleByName(const QString & name) const {
     return nullptr;
 }
 
-CSwordModuleInfo * CSwordBackend::findSwordModuleByPointer(const sword::SWModule * const swmodule) const {
+CSwordModuleInfo * CSwordBackend::findSwordModuleByPointer(const swordxx::SWModule * const swmodule) const {
     Q_FOREACH(CSwordModuleInfo * const mod, m_dataModel.moduleList())
         if (&mod->module() == swmodule)
             return mod;
@@ -379,31 +377,31 @@ QString CSwordBackend::configOptionName(const CSwordModuleInfo::FilterTypes opti
 
 const QString CSwordBackend::booknameLanguage(const QString & language) {
     if (!language.isEmpty()) {
-        sword::LocaleMgr::getSystemLocaleMgr()->setDefaultLocaleName(language.toUtf8().constData());
+        swordxx::LocaleMgr::getSystemLocaleMgr()->setDefaultLocaleName(language.toUtf8().constData());
 
         // Refresh the locale of all Bible and commentary modules!
-        // Use what sword returns, language may be different.
-        const QByteArray newLocaleName(QString(sword::LocaleMgr::getSystemLocaleMgr()->getDefaultLocaleName()).toUtf8());
+        // Use what Sword++ returns, language may be different.
+        const QByteArray newLocaleName(QString(swordxx::LocaleMgr::getSystemLocaleMgr()->getDefaultLocaleName()).toUtf8());
 
         Q_FOREACH(CSwordModuleInfo const * const mod, m_dataModel.moduleList()) {
             if (mod->type() == CSwordModuleInfo::Bible
                 || mod->type() == CSwordModuleInfo::Commentary)
             {
                 // Create a new key, it will get the default bookname language:
-                using VK = sword::VerseKey;
+                using VK = swordxx::VerseKey;
                 VK & vk = *static_cast<VK *>(mod->module().getKey());
                 vk.setLocale(newLocaleName.constData());
             }
         }
 
     }
-    return sword::LocaleMgr::getSystemLocaleMgr()->getDefaultLocaleName();
+    return swordxx::LocaleMgr::getSystemLocaleMgr()->getDefaultLocaleName();
 }
 
 void CSwordBackend::reloadModules(const SetupChangedReason reason) {
     shutdownModules();
 
-    //delete Sword's config to make Sword reload it!
+    //delete Sword++'s config to make Sword++ reload it!
 
     if (myconfig) { // force reload on config object because we may have changed the paths
         delete myconfig;
@@ -419,57 +417,57 @@ void CSwordBackend::reloadModules(const SetupChangedReason reason) {
     initModules(reason);
 }
 
-// Get one or more shared sword config (sword.conf) files
+// Get one or more shared Sword++ config (swordxx.conf) files
 QStringList CSwordBackend::getSharedSwordConfigFiles() const {
 #ifdef Q_OS_WIN
-    //  %ALLUSERSPROFILE%\Sword\sword.conf
-    return QStringList(util::directory::convertDirSeparators(qgetenv("SWORD_PATH")) += "/Sword/sword.conf");
+    //  %ALLUSERSPROFILE%\Swordxx\swordxx.conf
+    return QStringList(util::directory::convertDirSeparators(qgetenv("SWORDXX_PATH")) += "/Swordxx/swordxx.conf");
 #else
-    // /etc/sword.conf, /usr/local/etc/sword.conf
+    // /etc/swordxx.conf, /usr/local/etc/swordxx.conf
     return QString(globalConfPath).split(":");
 #endif
 }
 
-// Get the private sword directory
+// Get the private Sword++ directory
 QString CSwordBackend::getPrivateSwordConfigPath() const {
     return util::directory::getUserHomeSwordDir().absolutePath();
 }
 
 QString CSwordBackend::getPrivateSwordConfigFile() const {
-    return util::directory::convertDirSeparators(getPrivateSwordConfigPath() += "/sword.conf");
+    return util::directory::convertDirSeparators(getPrivateSwordConfigPath() += "/swordxx.conf");
 }
 
-// Return a list of used Sword dirs. Useful for the installer.
+// Return a list of used Sword++ dirs. Useful for the installer.
 QStringList CSwordBackend::swordDirList() const {
     namespace DU = util::directory;
     using SLCI = QStringList::const_iterator;
 
-    // Get the set of sword directories that could contain modules:
+    // Get the set of Sword++ directories that could contain modules:
     QSet<QString> swordDirSet;
     QStringList configs;
 
     if (QFile(getPrivateSwordConfigFile()).exists()) {
-        // Use the private sword.conf file:
+        // Use the private swordxx.conf file:
         configs << getPrivateSwordConfigFile();
     } else {
         /*
-          Did not find private sword.conf, will use shared sword.conf files to
-          build the private one. Once the private sword.conf exist, the shared
+          Did not find private swordxx.conf, will use shared swordxx.conf files to
+          build the private one. Once the private swordxx.conf exist, the shared
           ones will not be searched again.
         */
         configs = getSharedSwordConfigFiles();
 
 #ifdef Q_OS_WIN
         /*
-          On Windows, add the shared sword directory to the set so the new
-          private sword.conf will have it. The user could decide to delete this
+          On Windows, add the shared Sword++ directory to the set so the new
+          private swordxx.conf will have it. The user could decide to delete this
           shared path and it will not automatically come back.
         */
-        swordDirSet << DU::convertDirSeparators(qgetenv("SWORD_PATH"));
+        swordDirSet << DU::convertDirSeparators(qgetenv("SWORDXX_PATH"));
 #endif
     }
 
-    // Search the sword.conf file(s) for sword directories that could contain modules
+    // Search the swordxx.conf file(s) for Sword++ directories that could contain modules
     for (SLCI it = configs.begin(); it != configs.end(); ++it) {
         if (!QFileInfo(*it).exists())
             continue;
@@ -478,11 +476,11 @@ QStringList CSwordBackend::swordDirList() const {
           Get all DataPath and AugmentPath entries from the config file and add
           them to the list:
         */
-        sword::SWConfig conf(it->toUtf8().constData());
+        swordxx::SWConfig conf(it->toUtf8().constData());
         swordDirSet << QDir(QTextCodec::codecForLocale()->toUnicode(conf["Install"]["DataPath"].c_str())).absolutePath();
 
-        const sword::ConfigEntMap group(conf["Install"]);
-        using CEMCI = sword::ConfigEntMap::const_iterator ;
+        const swordxx::ConfigEntMap group(conf["Install"]);
+        using CEMCI = swordxx::ConfigEntMap::const_iterator ;
         for (std::pair<CEMCI, CEMCI> its = group.equal_range("AugmentPath");
              its.first != its.second;
              ++(its.first))
@@ -492,7 +490,7 @@ QStringList CSwordBackend::swordDirList() const {
         }
     }
 
-    // Add the private sword path to the set if not there already:
+    // Add the private Sword++ path to the set if not there already:
     swordDirSet << getPrivateSwordConfigPath();
 
     return QStringList::fromSet(swordDirSet);

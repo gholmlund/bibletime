@@ -10,16 +10,14 @@
 #include "plaintohtml.h"
 
 #include <QDebug>
-
-// Sword includes:
-#include <swbuf.h>
+#include <string>
 
 
-char Filters::PlainToHtml::processText(sword::SWBuf &text,
-                                       const sword::SWKey * /*key*/,
-                                       const sword::SWModule * /*module*/)
+char Filters::PlainToHtml::processText(std::string &text,
+                                       const swordxx::SWKey * /*key*/,
+                                       const swordxx::SWModule * /*module*/)
 {
-    sword::SWBuf orig = text;
+    std::string orig = text;
     const char * from = orig.c_str();
     bool inFootNote = false;
 

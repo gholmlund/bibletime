@@ -80,22 +80,22 @@ void BtModuleTextModel::setModules(const QStringList& modules) {
 
     if (isBible() || isCommentary()) {
         auto & m = firstModule->module();
-        m.setPosition(sword::TOP);
+        m.setPosition(swordxx::TOP);
         m_firstEntry = m.getIndex();
-        m.setPosition(sword::BOTTOM);
+        m.setPosition(swordxx::BOTTOM);
         m_maxEntries = m.getIndex() - m_firstEntry + 1;
     } else if(isLexicon()) {
         m_maxEntries =
                 static_cast<CSwordLexiconModuleInfo const *>(firstModule)
                         ->entries().size();
     } else if(isBook()) {
-        sword::TreeKeyIdx tk(
+        swordxx::TreeKeyIdx tk(
                 *static_cast<CSwordBookModuleInfo const *>(firstModule)
                         ->tree());
         tk.root();
         tk.firstChild();
         BT_ASSERT(tk.getOffset() == 4);
-        tk.setPosition(sword::BOTTOM);
+        tk.setPosition(swordxx::BOTTOM);
         m_maxEntries = tk.getOffset() / 4;
     }
 

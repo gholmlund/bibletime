@@ -43,7 +43,7 @@ public:
             SWTextDirection dir = DIRECTION_LTR, SWTextMarkup markup = FMT_UNKNOWN,
             const char *ilang = 0);
     virtual ~RawFiles();
-    virtual SWBuf &getRawEntryBuf();
+    virtual std::string &getRawEntryBuf();
 
     // write interface ----------------------------
     /** Is the module writable? :)

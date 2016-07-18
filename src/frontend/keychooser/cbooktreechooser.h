@@ -18,7 +18,7 @@
 #include "frontend/keychooser/ckeychooserwidget.h"
 
 
-namespace sword {
+namespace swordxx {
 class TreeKeyIdx;
 }
 class CSwordBookModuleInfo;

@@ -14,8 +14,7 @@
 
 #include "cswordmoduleinfo.h"
 
-// Sword includes:
-#include <treekeyidx.h>
+#include <swordxx/keys/treekeyidx.h>
 
 
 /**
@@ -29,7 +28,7 @@ class CSwordBookModuleInfo: public CSwordModuleInfo {
           \param module The module which belongs to this object
           \param backend The parent backend for this book module.
         */
-        CSwordBookModuleInfo(sword::SWModule & module,
+        CSwordBookModuleInfo(swordxx::SWModule & module,
                              CSwordBackend & usedBackend);
 
         /**
@@ -42,14 +41,14 @@ class CSwordBookModuleInfo: public CSwordModuleInfo {
                    delete the returned key because it's casted from the module
                    object.
         */
-        sword::TreeKeyIdx *tree() const;
+        swordxx::TreeKeyIdx *tree() const;
 
     private: /* Methods: */
 
         /**
         * A recursive helper function to help computng the module depth!
         */
-        void computeDepth(sword::TreeKeyIdx * const key, const int level = 0);
+        void computeDepth(swordxx::TreeKeyIdx * const key, const int level = 0);
 
     private: /* Fields: */
         int m_depth;

@@ -25,7 +25,7 @@ void CSwordModuleSearch::startSearch() {
 
     // Search module-by-module:
     Q_FOREACH(CSwordModuleInfo const * const m, m_searchModules) {
-        sword::ListKey results;
+        swordxx::ListKey results;
         size_t const found =
                 m->searchIndexed(m_searchText, m_searchScope, results);
         if (found > 0u) {
@@ -35,7 +35,7 @@ void CSwordModuleSearch::startSearch() {
     }
 }
 
-void CSwordModuleSearch::setSearchScope(const sword::ListKey &scope) {
+void CSwordModuleSearch::setSearchScope(const swordxx::ListKey &scope) {
     /// \todo Properly examine and document the inner workings of this method.
 
     m_searchScope.copyFrom( scope );

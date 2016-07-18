@@ -12,19 +12,17 @@
 #include <QRegExp>
 #include <QString>
 #include <QTextCodec>
+#include <swordxx/keys/treekey.h>
+#include <swordxx/keys/treekeyidx.h>
+#include <swordxx/keys/versekey.h>
+#include <swordxx/swkey.h>
+#include <swordxx/swmodule.h>
+#include <swordxx/utilstr.h>
 #include "../../util/btassert.h"
 #include "../drivers/cswordmoduleinfo.h"
 #include "cswordldkey.h"
 #include "cswordtreekey.h"
 #include "cswordversekey.h"
-
-// Sword includes:
-#include <swkey.h>
-#include <swmodule.h>
-#include <treekey.h>
-#include <treekeyidx.h>
-#include <utilstr.h>
-#include <versekey.h>
 
 
 const QTextCodec * CSwordKey::m_cp1252Codec = QTextCodec::codecForName("Windows-1252");
@@ -34,23 +32,23 @@ QString CSwordKey::rawText() {
         return QString::null;
 
     auto & m = m_module->module();
-    if (dynamic_cast<sword::SWKey *>(this))
+    if (dynamic_cast<swordxx::SWKey *>(this))
         m.getKey()->setText( rawKey() );
 
     if (key().isNull())
         return QString::null;
 
-    return QString::fromUtf8(m.getRawEntry());
+    return QString::fromUtf8(m.getRawEntry().c_str());
 }
 
 QString CSwordKey::renderedText(const CSwordKey::TextRenderType mode) {
     BT_ASSERT(m_module);
 
-    sword::SWKey * const k = dynamic_cast<sword::SWKey *>(this);
+    swordxx::SWKey * const k = dynamic_cast<swordxx::SWKey *>(this);
 
     auto & m = m_module->module();
     if (k) {
-        sword::VerseKey * vk_mod = dynamic_cast<sword::VerseKey *>(m.getKey());
+        swordxx::VerseKey * vk_mod = dynamic_cast<swordxx::VerseKey *>(m.getKey());
         if (vk_mod)
             vk_mod->setIntros(true);
 
@@ -61,7 +59,7 @@ QString CSwordKey::renderedText(const CSwordKey::TextRenderType mode) {
             /* In lexicons make sure that our key (e.g. 123) was successfully set to the module,
             i.e. the module key contains this key (e.g. 0123 contains 123) */
 
-            if (sword::stricmp(m.getKey()->getText(), rawKey())
+            if (swordxx::stricmp(m.getKey()->getText(), rawKey())
                 && !strstr(m.getKey()->getText(), rawKey()))
             {
                 qDebug("return an empty key for %s", m.getKey()->getText());
@@ -74,7 +72,7 @@ QString CSwordKey::renderedText(const CSwordKey::TextRenderType mode) {
         return QString::null;
 
     bool DoRender = mode != ProcessEntryAttributesOnly;
-    QString text = QString::fromUtf8(m.renderText(nullptr, -1, DoRender));
+    QString text = QString::fromUtf8(m.renderText(nullptr, -1, DoRender).c_str());
     if (!DoRender)
         return QString::null;
 
@@ -130,14 +128,14 @@ QString CSwordKey::strippedText() {
         return QString::null;
 
     auto & m = m_module->module();
-    if (dynamic_cast<sword::SWKey*>(this)) {
+    if (dynamic_cast<swordxx::SWKey*>(this)) {
         char * buffer = new char[strlen(rawKey()) + 1];
         strcpy(buffer, rawKey());
         m.getKey()->setText(buffer);
         delete [] buffer;
     }
 
-    return QString::fromUtf8(m.stripText());
+    return QString::fromUtf8(m.stripText().c_str());
 }
 
 void CSwordKey::emitBeforeChanged() {
@@ -154,15 +152,15 @@ CSwordKey * CSwordKey::createInstance(const CSwordModuleInfo * module) {
     if (!module)
         return nullptr;
 
-    sword::SWKey * const key = module->module().getKey();
+    swordxx::SWKey * const key = module->module().getKey();
 
     switch (module->type()) {
 
         case CSwordModuleInfo::Bible: // Fall through
         case CSwordModuleInfo::Commentary:
 
-            BT_ASSERT(dynamic_cast<sword::VerseKey *>(key));
-            return new CSwordVerseKey(static_cast<sword::VerseKey *>(key),
+            BT_ASSERT(dynamic_cast<swordxx::VerseKey *>(key));
+            return new CSwordVerseKey(static_cast<swordxx::VerseKey *>(key),
                                       module);
 
         case CSwordModuleInfo::Lexicon:
@@ -171,8 +169,8 @@ CSwordKey * CSwordKey::createInstance(const CSwordModuleInfo * module) {
 
         case CSwordModuleInfo::GenericBook:
 
-            BT_ASSERT(dynamic_cast<sword::TreeKeyIdx *>(key));
-            return new CSwordTreeKey(dynamic_cast<sword::TreeKeyIdx *>(key),
+            BT_ASSERT(dynamic_cast<swordxx::TreeKeyIdx *>(key));
+            return new CSwordTreeKey(dynamic_cast<swordxx::TreeKeyIdx *>(key),
                                      module );
 
         default:

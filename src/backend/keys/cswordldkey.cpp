@@ -10,13 +10,11 @@
 #include "cswordldkey.h"
 
 #include <QTextCodec>
+#include <swordxx/swld.h>
+#include <swordxx/swmodule.h>
+#include <swordxx/utilstr.h>
 #include "../../util/btassert.h"
 #include "../drivers/cswordlexiconmoduleinfo.h"
-
-// Sword includes:
-#include <swmodule.h>
-#include <swld.h>
-#include <utilstr.h>
 
 
 CSwordLDKey::CSwordLDKey(const CSwordModuleInfo *module) {

@@ -10,34 +10,31 @@
 #include "teitohtml.h"
 
 #include <QString>
+#include <swordxx/swmodule.h>
+#include <swordxx/utilxml.h>
 #include "../config/btconfig.h"
 #include "../drivers/cswordmoduleinfo.h"
 #include "../managers/clanguagemgr.h"
 #include "../managers/cswordbackend.h"
 #include "../managers/referencemanager.h"
 
-// Sword includes:
-#include <swbuf.h>
-#include <swmodule.h>
-#include <utilxml.h>
-
 
 namespace Filters {
 
 TeiToHtml::TeiToHtml()
-    : sword::TEIHTMLHREF()
+    : swordxx::TEIHTMLHREF()
 {
     setPassThruUnknownEscapeString(true); // the HTML widget will render the HTML escape codes
 }
 
-bool TeiToHtml::handleToken(sword::SWBuf &buf, const char *token,
-                            sword::BasicFilterUserData *userData)
+bool TeiToHtml::handleToken(std::string &buf, const char *token,
+                            swordxx::BasicFilterUserData *userData)
 {
     // manually process if it wasn't a simple substitution
 
     if (!substituteToken(buf, token)) {
 
-        sword::XMLTag tag(token);
+        swordxx::XMLTag tag(token);
 
         if (0) {
 
@@ -46,7 +43,7 @@ bool TeiToHtml::handleToken(sword::SWBuf &buf, const char *token,
 
             if (!tag.isEndTag() && !tag.isEmpty()) {
 
-                renderReference(tag.getAttribute("osisRef"), buf, userData);
+                renderReference(tag.getAttribute("osisRef").c_str(), buf, userData);
 
             }
             else if (tag.isEndTag()) {
@@ -58,7 +55,7 @@ bool TeiToHtml::handleToken(sword::SWBuf &buf, const char *token,
         }
         // <hi> highlighted text
         else if (!strcmp(tag.getName(), "hi")) {
-            const sword::SWBuf type = tag.getAttribute("rend");
+            const std::string type = tag.getAttribute("rend");
 
             if ((!tag.isEndTag()) && (!tag.isEmpty())) {
                 if (type == "bold") {
@@ -91,15 +88,15 @@ bool TeiToHtml::handleToken(sword::SWBuf &buf, const char *token,
             }
         }
         else { //all tokens handled by OSISHTMLHref will run through the filter now
-            return sword::TEIHTMLHREF::handleToken(buf, token, userData);
+            return swordxx::TEIHTMLHREF::handleToken(buf, token, userData);
         }
     }
 
     return false;
 }
 
-void TeiToHtml::renderReference(const char *osisRef, sword::SWBuf &buf,
-                                sword::BasicFilterUserData *myUserData)
+void TeiToHtml::renderReference(const char *osisRef, std::string &buf,
+                                swordxx::BasicFilterUserData *myUserData)
 {
     QString ref( osisRef );
     QString hrefRef( ref );

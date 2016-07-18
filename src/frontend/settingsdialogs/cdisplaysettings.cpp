@@ -14,6 +14,8 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QFormLayout>
+#include <swordxx/localemgr.h>
+#include <swordxx/swlocale.h>
 #include "backend/config/btconfig.h"
 #include "backend/managers/cdisplaytemplatemgr.h"
 #include "backend/rendering/cdisplayrendering.h"
@@ -25,11 +27,7 @@
 #include "util/cresmgr.h"
 #include "util/tool.h"
 
-// Sword includes:
-#include <localemgr.h>
-#include <swlocale.h>
-
-using SBLCI = std::list<sword::SWBuf>::const_iterator;
+using SBLCI = std::list<std::string>::const_iterator;
 
 // ***********************
 // Container for BtWebEngineView to control its size
@@ -141,9 +139,9 @@ void CDisplaySettingsPage::resetLanguage() {
     int i = atv.indexOf(best);
     if (i > 0) {
         atv.resize(i);
-        const std::list<sword::SWBuf> locales = sword::LocaleMgr::getSystemLocaleMgr()->getAvailableLocales();
+        const std::list<std::string> locales = swordxx::LocaleMgr::getSystemLocaleMgr()->getAvailableLocales();
         for (SBLCI it = locales.begin(); it != locales.end(); ++it) {
-            const char * abbr = sword::LocaleMgr::getSystemLocaleMgr()->getLocale((*it).c_str())->getName();
+            const char * abbr = swordxx::LocaleMgr::getSystemLocaleMgr()->getLocale((*it).c_str())->getName();
             i = atv.indexOf(abbr);
             if (i >= 0) {
                 best = abbr;
@@ -185,16 +183,16 @@ void CDisplaySettingsPage::initSwordLocaleCombo() {
     BT_ASSERT(CLanguageMgr::instance()->languageForAbbrev("en_US"));
     languageNames.insert(CLanguageMgr::instance()->languageForAbbrev("en_US")->translatedName(), "en_US");
 
-    const std::list<sword::SWBuf> locales = sword::LocaleMgr::getSystemLocaleMgr()->getAvailableLocales();
+    const std::list<std::string> locales = swordxx::LocaleMgr::getSystemLocaleMgr()->getAvailableLocales();
     for (SBLCI it = locales.begin(); it != locales.end(); ++it) {
-        const char * const abbreviation = sword::LocaleMgr::getSystemLocaleMgr()->getLocale((*it).c_str())->getName();
+        const char * const abbreviation = swordxx::LocaleMgr::getSystemLocaleMgr()->getLocale((*it).c_str())->getName();
         const CLanguageMgr::Language * const l = CLanguageMgr::instance()->languageForAbbrev(abbreviation);
 
         if (l->isValid()) {
             languageNames.insert(l->translatedName(), abbreviation);
         } else {
             languageNames.insert(
-                sword::LocaleMgr::getSystemLocaleMgr()->getLocale((*it).c_str())->getDescription(),
+                swordxx::LocaleMgr::getSystemLocaleMgr()->getLocale((*it).c_str())->getDescription(),
                 abbreviation);
         }
     }

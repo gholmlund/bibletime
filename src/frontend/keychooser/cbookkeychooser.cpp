@@ -219,7 +219,7 @@ void CBookKeyChooser::setupCombo(const QString & key,
 
     CSwordTreeKey tmpKey(*m_key);
     tmpKey.setKey(key);
-    tmpKey.sword::TreeKeyIdx::parent();
+    tmpKey.swordxx::TreeKeyIdx::parent();
     tmpKey.firstChild();
 
     QStringList items;

@@ -57,27 +57,27 @@ QString convertDirSeparators(const QString& path);
 
 #ifdef Q_OS_WIN  // Windows only directory
 
-/** Return the path to the sword dir., Windows only
-    C:\Program Files\BibleTime\share\sword
+/** Return the path to the Sword++ dir., Windows only
+    C:\Program Files\BibleTime\share\swordxx
  */
 const QDir &getApplicationSwordDir();
 #endif
 
 #if defined Q_OS_WIN || defined Q_OS_ANDROID
-/** Return the path to the %ALLUSERSPROFILE%\Sword directory */
+/** Return the path to the %ALLUSERSPROFILE%\Swordxx directory */
 const QDir &getSharedSwordDir();
 #endif
 
 #ifdef Q_OS_MAC  // Mac only directories
 
 /**
- * Path to the Sword locales
+ * Path to the Sword++ locales
  */
 const QDir &getSwordLocalesDir();
 
 #endif
 
-/** Return the path to the SWORD_PATH env var directory */
+/** Return the path to the SWORDXX_PATH env var directory */
 const QDir &getSwordPathDir();
 
 /** Return the path to the icons. */
@@ -112,14 +112,14 @@ const QDir &getQmlDir();
     $HOME on linux */
 const QDir &getUserHomeDir();
 
-/** Return the path to the user's home .sword (or Sword) directory.
-    %APPDATA%\Sword on Windows
-    $HOME\.sword on linux */
+/** Return the path to the user's home .swordxx (or Swordxx) directory.
+    %APPDATA%\Swordxx on Windows
+    $HOME\.swordxx on linux */
 const QDir &getUserHomeSwordDir();
 
-/** Return the path to the user's home .sword (or Sword) mods.d directory.
-    %APPDATA%\Sword\mods.d on Windows
-    $HOME\.sword\mods.d on linux */
+/** Return the path to the user's home .swordxx (or Swordxx) mods.d directory.
+    %APPDATA%\Swordxx\mods.d on Windows
+    $HOME\.swordxx\mods.d on linux */
 const QDir &getUserHomeSwordModsDir();
 
 /** Return the path to the user's settings directory.*/

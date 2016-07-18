@@ -22,12 +22,10 @@
 #include <QList>
 #include <QMetaType>
 #include <QString>
-
-// Sword includes:
-#include <listkey.h>
-#include <swmodule.h>
-#include <swsearchable.h>
-#include <swversion.h>
+#include <swordxx/keys/listkey.h>
+#include <swordxx/swmodule.h>
+#include <swordxx/swsearchable.h>
+#include <swordxx/version.h>
 
 
 #ifdef CLUCENE2
@@ -187,9 +185,9 @@ public: /* Methods: */
     QString config(const CSwordModuleInfo::ConfigEntry entry) const;
 
     /**
-    * Returns the module object so all objects can access the original Sword module.
+    * Returns the module object so all objects can access the original Sword++ module.
     */
-    inline sword::SWModule & module() const {
+    inline swordxx::SWModule & module() const {
         return m_module;
     }
 
@@ -220,7 +218,7 @@ wrong, or if the config file was write protected return false.
       contains only printable characters (for the first 100 chars or so). If
       that is the case, we can safely assume that a) the module was properly
       unlocked and b) no buffer overflows will occur, which can happen when
-      Sword filters process garbage text which was not properly decrypted.
+      Sword++ filters process garbage text which was not properly decrypted.
     */
     bool unlockKeyIsValid() const;
 
@@ -265,8 +263,8 @@ wrong, or if the config file was write protected return false.
       \throws on error
     */
     size_t searchIndexed(const QString & searchedText,
-                         const sword::ListKey & scope,
-                         sword::ListKey & results) const;
+                         const swordxx::ListKey & scope,
+                         swordxx::ListKey & results) const;
 
     /**
       \returns the type of the module.
@@ -276,13 +274,13 @@ wrong, or if the config file was write protected return false.
     }
 
     /**
-    * Returns the required Sword version for this module.
-    * Returns -1 if no special Sword version is required.
+    * Returns the required Sword++ version for this module.
+    * Returns -1 if no special Sword++ version is required.
     */
-    sword::SWVersion minimumSwordVersion() const;
+    swordxx::Version minimumSwordxxVersion() const;
 
     /**
-      \note The Sword library takes care of the duplicate names: _n is added
+      \note The Sword++ library takes care of the duplicate names: _n is added
             after each duplicate.
       \returns The name of this module.
     */
@@ -409,7 +407,7 @@ public slots:
 
 protected: /* Methods: */
 
-    CSwordModuleInfo(sword::SWModule & module,
+    CSwordModuleInfo(swordxx::SWModule & module,
                      CSwordBackend & backend,
                      ModuleType type);
 
@@ -430,7 +428,7 @@ signals:
 
 private: /* Fields: */
 
-    sword::SWModule & m_module;
+    swordxx::SWModule & m_module;
     CSwordBackend & m_backend;
     ModuleType const m_type;
     bool m_hidden;

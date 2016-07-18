@@ -18,14 +18,14 @@
 /**
   \brief Commentary module implementation.
 
-  This CSwordModule implementation provides access to Sword's commentary modules.
+  This CSwordModule implementation provides access to Sword++'s commentary modules.
 */
 class CSwordCommentaryModuleInfo: public CSwordBibleModuleInfo {
         Q_OBJECT
 
     public: /* Methods: */
 
-        inline CSwordCommentaryModuleInfo(sword::SWModule & module,
+        inline CSwordCommentaryModuleInfo(swordxx::SWModule & module,
                                           CSwordBackend & backend)
             : CSwordBibleModuleInfo(module,
                                     backend,

@@ -33,7 +33,7 @@
 
 
 using namespace Rendering;
-using namespace sword;
+using namespace swordxx;
 
 namespace InfoDisplay {
 

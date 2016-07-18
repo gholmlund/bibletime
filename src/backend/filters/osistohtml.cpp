@@ -10,6 +10,7 @@
 #include "osistohtml.h"
 
 #include <QString>
+#include <swordxx/utilxml.h>
 #include "../../util/btassert.h"
 #include "../config/btconfig.h"
 #include "../drivers/cswordmoduleinfo.h"
@@ -17,13 +18,8 @@
 #include "../managers/cswordbackend.h"
 #include "../managers/referencemanager.h"
 
-// Sword includes:
-#include <swbuf.h>
-#include <swmodule.h>
-#include <utilxml.h>
 
-
-Filters::OsisToHtml::OsisToHtml() : sword::OSISHTMLHREF() {
+Filters::OsisToHtml::OsisToHtml() : swordxx::OSISHTMLHREF() {
     setPassThruUnknownEscapeString(true); //the HTML widget will render the HTML escape codes
 
     addTokenSubstitute("inscription", "<span class=\"inscription\">");
@@ -49,14 +45,14 @@ Filters::OsisToHtml::OsisToHtml() : sword::OSISHTMLHREF() {
 
 }
 
-bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, sword::BasicFilterUserData *userData) {
+bool Filters::OsisToHtml::handleToken(std::string &buf, const char *token, swordxx::BasicFilterUserData *userData) {
     // manually process if it wasn't a simple substitution
 
     if (!substituteToken(buf, token)) {
         UserData* myUserData = dynamic_cast<UserData*>(userData);
-        sword::SWModule* myModule = const_cast<sword::SWModule*>(myUserData->module); //hack
+        swordxx::SWModule* myModule = const_cast<swordxx::SWModule*>(myUserData->module); //hack
 
-        sword::XMLTag tag(token);
+        swordxx::XMLTag tag(token);
         //     qWarning("found %s", token);
         const bool osisQToTick = ((!userData->module->getConfigEntry("OSISqToTick")) || (strcmp(userData->module->getConfigEntry("OSISqToTick"), "false")));
 
@@ -69,7 +65,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
             if (tag.isEndTag()) {
                 buf.append("</div>");
             } else {
-                sword::SWBuf type( tag.getAttribute("type") );
+                std::string type( tag.getAttribute("type") );
                 if (type == "introduction") {
                     if (!tag.isEmpty())
                         buf.append("<div class=\"introduction\">");
@@ -85,25 +81,25 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
         }
         else if (!strcmp(tag.getName(), "w")) {
             if ((!tag.isEmpty()) && (!tag.isEndTag())) { //start tag
-                const char *attrib;
+                std::string attrib;
                 const char *val;
 
-                sword::XMLTag outTag("span");
-                sword::SWBuf attrValue;
+                swordxx::XMLTag outTag("span");
+                std::string attrValue;
 
-                if ((attrib = tag.getAttribute("xlit"))) {
-                    val = strchr(attrib, ':');
-                    val = (val) ? (val + 1) : attrib;
+                if (!(attrib = tag.getAttribute("xlit")).empty()) {
+                    val = strchr(attrib.c_str(), ':');
+                    val = (val) ? (val + 1) : attrib.c_str();
                     outTag.setAttribute("xlit", val);
                 }
 
-                if ((attrib = tag.getAttribute("gloss"))) {
-                    val = strchr(attrib, ':');
-                    val = (val) ? (val + 1) : attrib;
+                if (!(attrib = tag.getAttribute("gloss")).empty()) {
+                    val = strchr(attrib.c_str(), ':');
+                    val = (val) ? (val + 1) : attrib.c_str();
                     outTag.setAttribute("gloss", val);
                 }
 
-                if ((attrib = tag.getAttribute("lemma"))) {
+                if (!(attrib = tag.getAttribute("lemma")).empty()) {
                     char splitChar = '|';
                     const int countSplit1 = tag.getAttributePartCount("lemma", '|');
                     const int countSplit2 = tag.getAttributePartCount("lemma", ' '); /// \todo not allowed, remove soon
@@ -123,7 +119,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
 
                     do {
                         if (attrValue.length()) {
-                            attrValue.append( '|' );
+                            attrValue.push_back( '|' );
                         }
 
                         attrib = tag.getAttribute("lemma", i, splitChar);
@@ -132,8 +128,8 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                             i = 0;
                         }
 
-                        val = strchr(attrib, ':');
-                        val = (val) ? (val + 1) : attrib;
+                        val = strchr(attrib.c_str(), ':');
+                        val = (val) ? (val + 1) : attrib.c_str();
 
                         attrValue.append(val);
                     }
@@ -144,7 +140,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                     }
                 }
 
-                if ((attrib = tag.getAttribute("morph"))) {
+                if (!(attrib = tag.getAttribute("morph")).empty()) {
                     char splitChar = '|';
                     const int countSplit1 = tag.getAttributePartCount("morph", '|');
                     const int countSplit2 = tag.getAttributePartCount("morph", ' '); /// \todo not allowed, remove soon
@@ -165,7 +161,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
 
                     do {
                         if (attrValue.length()) {
-                            attrValue.append('|');
+                            attrValue.push_back('|');
                         }
 
                         attrib = tag.getAttribute("morph", i, splitChar);
@@ -174,12 +170,12 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                             i = 0; // to handle our -1 condition
                         }
 
-                        val = strchr(attrib, ':');
+                        val = strchr(attrib.c_str(), ':');
 
                         if (val) { //the prefix gives the modulename
                             //check the prefix
-                            if (!strncmp("robinson:", attrib, 9)) { //robinson
-                                attrValue.append( "Robinson:" ); //work is not the same as Sword's module name
+                            if (!strncmp("robinson:", attrib.c_str(), 9)) { //robinson
+                                attrValue.append( "Robinson:" ); //work is not the same as Sword++'s module name
                                 attrValue.append( val + 1 );
                             }
                             //strongs is handled by BibleTime
@@ -187,11 +183,11 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                                 attrValue.append( !strncmp(attrib, "x-", 2) ? attrib+2 : attrib );
                             }*/
                             else {
-                                attrValue.append( !strncmp(attrib, "x-", 2) ? attrib + 2 : attrib );
+                                attrValue.append( !strncmp(attrib.c_str(), "x-", 2) ? attrib.c_str() + 2 : attrib.c_str());
                             }
                         }
                         else { //no prefix given
-                            val = attrib;
+                            val = attrib.c_str();
                             const bool skipFirst = ((val[0] == 'T') && ((val[1] == 'H') || (val[1] == 'G')));
                             attrValue.append( skipFirst ? val + 1 : val );
                         }
@@ -203,9 +199,9 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                     }
                 }
 
-                if ((attrib = tag.getAttribute("POS"))) {
-                    val = strchr(attrib, ':');
-                    val = (val) ? (val + 1) : attrib;
+                if (!(attrib = tag.getAttribute("POS")).empty()) {
+                    val = strchr(attrib.c_str(), ':');
+                    val = (val) ? (val + 1) : attrib.c_str();
                     outTag.setAttribute("pos", val);
                 }
 
@@ -219,7 +215,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
         // <note> tag
         else if (!strcmp(tag.getName(), "note")) {
             if (!tag.isEndTag()) { //start tag
-                const sword::SWBuf type( tag.getAttribute("type") );
+                const std::string type( tag.getAttribute("type") );
 
                 if (type == "crossReference") { //note containing cross references
                     myUserData->inCrossrefNote = true;
@@ -229,15 +225,15 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                      * Do not count crossrefs as footnotes if they are displayed in the text. This will cause problems
                      * with footnote numbering when crossrefs are turned on/off.
                      * When accessing footnotes, crossrefs must be turned off in the filter so that they are not in the entry
-                     * attributes of Sword.
+                     * attributes of Sword++.
                      *
                      * //myUserData->swordFootnote++; // cross refs count as notes, too
                      */
 
                     buf.append("<span class=\"crossreference\">");
-                    sword::SWBuf footnoteNumber = tag.getAttribute("swordFootnote");
-                    sword::SWBuf footnoteBody = myUserData->entryAttributes["Footnote"][footnoteNumber]["body"];
-                    buf += myModule->renderText(footnoteBody);
+                    std::string footnoteNumber = tag.getAttribute("swordFootnote");
+                    std::string footnoteBody = myUserData->entryAttributes["Footnote"][footnoteNumber]["body"];
+                    buf += myModule->renderText(footnoteBody.c_str());
                 }
 
                 /* else if (type == "explanation") {
@@ -257,12 +253,12 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                     //           qWarning("found note in %s", myUserData->key->getShortText());
                     buf.append(" <span class=\"footnote\" note=\"");
                     buf.append(myModule->getName());
-                    buf.append('/');
+                    buf.push_back('/');
                     buf.append(myUserData->key->getShortText());
-                    buf.append('/');
+                    buf.push_back('/');
                     buf.append( QString::number(myUserData->swordFootnote++).toUtf8().constData() ); //inefficient
 
-                    const sword::SWBuf n = tag.getAttribute("n");
+                    const std::string n = tag.getAttribute("n");
 
                     buf.append("\">");
                     buf.append( (n.length() > 0) ? n.c_str() : "*" );
@@ -289,7 +285,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
         else if (!strcmp(tag.getName(), "reference")) { // <reference> tag
             if (!tag.isEndTag() && !tag.isEmpty()) {
 
-                renderReference(tag.getAttribute("osisRef"), buf, myModule, myUserData);
+                renderReference(tag.getAttribute("osisRef").c_str(), buf, myModule, myUserData);
 
             }
             else if (tag.isEndTag()) {
@@ -317,7 +313,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
 
         // <hi> highlighted text
         else if (!strcmp(tag.getName(), "hi")) {
-            const sword::SWBuf type = tag.getAttribute("type");
+            const std::string type = tag.getAttribute("type");
 
             if ((!tag.isEndTag()) && (!tag.isEmpty())) {
                 if (type == "bold") {
@@ -352,7 +348,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
 
         //name
         else if (!strcmp(tag.getName(), "name")) {
-            const sword::SWBuf type = tag.getAttribute("type");
+            const std::string type = tag.getAttribute("type");
 
             if ((!tag.isEndTag()) && (!tag.isEmpty())) {
                 if (type == "geographic") {
@@ -379,7 +375,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
             }
         }
         else if (!strcmp(tag.getName(), "transChange")) {
-            sword::SWBuf type( tag.getAttribute("type") );
+            std::string type( tag.getAttribute("type") );
 
             if ( !type.length() ) {
                 type = tag.getAttribute("changeType");
@@ -424,11 +420,11 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
 
         // <q> quote
         else if (!strcmp(tag.getName(), "q")) {
-            //sword::SWBuf type = tag.getAttribute("type");
-            sword::SWBuf who = tag.getAttribute("who");
-            const char *lev = tag.getAttribute("level");
-            int level = (lev) ? atoi(lev) : 1;
-            sword::SWBuf quoteMarker = tag.getAttribute("marker");
+            //std::string type = tag.getAttribute("type");
+            std::string who = tag.getAttribute("who");
+            auto lev(tag.getAttribute("level"));
+            int level = (!lev.empty()) ? atoi(lev.c_str()) : 1;
+            std::string quoteMarker = tag.getAttribute("marker");
 
             if ((!tag.isEndTag())) {
                 if (!tag.isEmpty()) {
@@ -439,7 +435,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                     buf.append(quoteMarker);
                 }
                 else if (osisQToTick) //alternate " and '
-                    buf.append((level % 2) ? '\"' : '\'');
+                    buf.push_back((level % 2) ? '\"' : '\'');
 
                 if (who == "Jesus") {
                     buf.append("<span class=\"jesuswords\">");
@@ -453,7 +449,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
                     buf.append(quoteMarker);
                 }
                 else if (osisQToTick) { //alternate " and '
-                    buf.append((level % 2) ? '\"' : '\'');
+                    buf.push_back((level % 2) ? '\"' : '\'');
                 }
 
                 myUserData->quote.who = "";
@@ -463,7 +459,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
         // abbr tag
         else if (!strcmp(tag.getName(), "abbr")) {
             if (!tag.isEndTag() && !tag.isEmpty()) {
-                const sword::SWBuf expansion = tag.getAttribute("expansion");
+                const std::string expansion = tag.getAttribute("expansion");
 
                 buf.append("<span class=\"abbreviation\" expansion=\"");
                 buf.append(expansion);
@@ -476,7 +472,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
 
         // <milestone> tag
         else if (!strcmp(tag.getName(), "milestone")) {
-            const sword::SWBuf type = tag.getAttribute("type");
+            const std::string type = tag.getAttribute("type");
 
             if ((type == "screen") || (type == "line")) {//line break
                 buf.append("<br/>");
@@ -484,7 +480,7 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
             }
             else if (type == "x-p") { //e.g. occurs in the KJV2006 module
                 //buf.append("<br/>");
-                const sword::SWBuf marker = tag.getAttribute("marker");
+                const std::string marker = tag.getAttribute("marker");
                 if (marker.length() > 0) {
                     buf.append(marker);
                 }
@@ -494,18 +490,18 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
         else if (!strcmp(tag.getName(), "seg")) {
             if (!tag.isEndTag() && !tag.isEmpty()) {
 
-                const sword::SWBuf type = tag.getAttribute("type");
+                const std::string type = tag.getAttribute("type");
 
                 if (type == "morph") {//line break
                     //This code is for WLC and MORPH (WHI)
-                    sword::XMLTag outTag("span");
+                    swordxx::XMLTag outTag("span");
                     outTag.setAttribute("class", "morphSegmentation");
-                    const char* attrValue;
+                    std::string attrValue;
                     //Transfer the values to the span
                     //Problem: the data is in hebrew/aramaic, how to encode in HTML/BibleTime?
-                    if ((attrValue = tag.getAttribute("lemma"))) outTag.setAttribute("lemma", attrValue);
-                    if ((attrValue = tag.getAttribute("morph"))) outTag.setAttribute("morph", attrValue);
-                    if ((attrValue = tag.getAttribute("homonym"))) outTag.setAttribute("homonym", attrValue);
+                    if (!(attrValue = tag.getAttribute("lemma")).empty()) outTag.setAttribute("lemma", attrValue.c_str());
+                    if (!(attrValue = tag.getAttribute("morph")).empty()) outTag.setAttribute("morph", attrValue.c_str());
+                    if (!(attrValue = tag.getAttribute("homonym")).empty()) outTag.setAttribute("homonym", attrValue.c_str());
 
                     buf.append(outTag.toString());
                     //buf.append("<span class=\"morphSegmentation\">");
@@ -531,14 +527,14 @@ bool Filters::OsisToHtml::handleToken(sword::SWBuf &buf, const char *token, swor
         }
 
         else { //all tokens handled by OSISHTMLHref will run through the filter now
-            return sword::OSISHTMLHREF::handleToken(buf, token, userData);
+            return swordxx::OSISHTMLHREF::handleToken(buf, token, userData);
         }
     }
 
     return false;
 }
 
-void Filters::OsisToHtml::renderReference(const char *osisRef, sword::SWBuf &buf, sword::SWModule *myModule, UserData *myUserData) {
+void Filters::OsisToHtml::renderReference(const char *osisRef, std::string &buf, swordxx::SWModule *myModule, UserData *myUserData) {
     QString ref( osisRef );
     QString hrefRef( ref );
     //BT_ASSERT(!ref.isEmpty()); checked later

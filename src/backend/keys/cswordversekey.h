@@ -15,9 +15,7 @@
 #include "cswordkey.h"
 
 #include <QString>
-
-// Sword includes:
-#include <versekey.h>
+#include <swordxx/keys/versekey.h>
 
 
 class CSwordModuleInfo;
@@ -41,11 +39,11 @@ class CSwordModuleInfo;
  * will be invalid and the application will probably crash.
  *
  * @version $Id: cswordversekey.h,v 1.26 2006/02/25 11:38:15 joachim Exp $
- * @short CSwordKey implementation for Sword's VerseKey.
+ * @short CSwordKey implementation for Sword++'s VerseKey.
  * @author The BibleTime team
  */
 
-class CSwordVerseKey : public CSwordKey, public sword::VerseKey {
+class CSwordVerseKey : public CSwordKey, public swordxx::VerseKey {
 
     public: /* Types: */
         enum JumpType {
@@ -73,7 +71,7 @@ class CSwordVerseKey : public CSwordKey, public sword::VerseKey {
          * \param[in] k Position to use.
          * \param[in] module Module to use.
          */
-        CSwordVerseKey(const sword::VerseKey *k,
+        CSwordVerseKey(const swordxx::VerseKey *k,
                        const CSwordModuleInfo *module);
 
         CSwordKey* copy() const override;

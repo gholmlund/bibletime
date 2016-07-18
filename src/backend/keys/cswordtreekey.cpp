@@ -71,7 +71,7 @@ bool CSwordTreeKey::setKey(const char *newKey) {
 
 QString CSwordTreeKey::getLocalNameUnicode() {
     //return m_module->getTextCodec()->toUnicode(getLocalName());
-    //Only UTF-8 and latin1 are legal Sword module encodings
+    //Only UTF-8 and latin1 are legal Sword++ module encodings
     BT_ASSERT(m_module);
     if (m_module->isUnicode()) {
         return QString::fromUtf8(getLocalName());

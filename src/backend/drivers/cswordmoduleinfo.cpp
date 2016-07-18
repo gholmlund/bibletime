@@ -21,6 +21,13 @@
 #include <QFileInfo>
 #include <QSettings>
 #include <QTextDocument>
+#include <string>
+#include <swordxx/filters/rtfhtml.h>
+#include <swordxx/keys/listkey.h>
+#include <swordxx/keys/versekey.h>
+#include <swordxx/swconfig.h>
+#include <swordxx/swkey.h>
+#include <swordxx/utilstr.h>
 #include "../../util/btassert.h"
 #include "../../util/btscopeexit.h"
 #include "../../util/cresmgr.h"
@@ -33,14 +40,6 @@
 #include "../cswordmodulesearch.h"
 #include "cswordbiblemoduleinfo.h"
 #include "cswordlexiconmoduleinfo.h"
-
-// Sword includes:
-#include <listkey.h>
-#include <swbuf.h>
-#include <swconfig.h>
-#include <swkey.h>
-#include <rtfhtml.h>
-#include <versekey.h>
 
 
 //Increment this, if the index format changes
@@ -55,7 +54,7 @@ namespace {
 
 inline CSwordModuleInfo::Category retrieveCategory(
     CSwordModuleInfo::ModuleType const type,
-    sword::SWModule & module)
+    swordxx::SWModule & module)
 {
     /// \todo Maybe we can use raw string comparsion instead of QString?
     QString const cat(module.getConfigEntry("Category"));
@@ -92,7 +91,7 @@ inline CSwordModuleInfo::Category retrieveCategory(
 
 }
 
-CSwordModuleInfo::CSwordModuleInfo(sword::SWModule & module,
+CSwordModuleInfo::CSwordModuleInfo(swordxx::SWModule & module,
                                    CSwordBackend & backend,
                                    ModuleType type)
     : m_module(module)
@@ -108,18 +107,18 @@ CSwordModuleInfo::CSwordModuleInfo(sword::SWModule & module,
                language for the module: */
             ? config(GlossaryFrom)
             : module.getLanguage()))
-    , m_cachedHasVersion(!QString((*m_backend.getConfig())[module.getName()]["Version"]).isEmpty())
+    , m_cachedHasVersion(!QString::fromStdString((*m_backend.getConfig())[module.getName()]["Version"]).isEmpty())
 {
     m_hidden = btConfig().value<QStringList>("state/hiddenModules",
                                              QStringList()).contains(m_cachedName);
 
     if (m_cachedHasVersion
-        && (minimumSwordVersion() > sword::SWVersion::currentVersion))
+        && (minimumSwordxxVersion() > swordxx::swordCompatVersion()))
     {
-        qWarning("The module \"%s\" requires a newer Sword library. Please "
-                 "update to \"Sword %s\".",
+        qWarning("The module \"%s\" requires a newer Sword++ library. Please "
+                 "update to \"Sword++ %s\".",
                  m_cachedName.toUtf8().constData(),
-                 minimumSwordVersion().getText());
+                 swordxx::versionToString(minimumSwordxxVersion()).c_str());
 
         /// \todo if this is the case, can we use the module at all?
     }
@@ -134,13 +133,13 @@ bool CSwordModuleInfo::unlock(const QString & unlockKey) {
     btConfig().setModuleEncryptionKey(m_cachedName, unlockKey);
 
     /// \todo remove this comment once it is no longer needed
-    /* There is currently a deficiency in sword 1.6.1 in that
+    /* There is currently a deficiency in Sword 1.6.1 in that
        backend->setCipherKey() does not work correctly for modules from which
        data was already fetched. Therefore we have to reload the modules in
        bibletime.cpp */
     m_backend.setCipherKey(m_module.getName(), unlockKey.toUtf8().constData());
 
-    /// \todo write to Sword config as well
+    /// \todo write to Sword++ config as well
 
     if (unlockKeyIsValid() != unlocked)
         emit unlockedChanged(!unlocked);
@@ -149,7 +148,7 @@ bool CSwordModuleInfo::unlock(const QString & unlockKey) {
 
 bool CSwordModuleInfo::isLocked() const {
     // still works, but the cipherkey is stored in BtConfig.
-    // Works because it is set in sword on program startup.
+    // Works because it is set in Sword++ on program startup.
 
     return isEncrypted() && !unlockKeyIsValid();
 }
@@ -162,17 +161,17 @@ bool CSwordModuleInfo::isEncrypted() const {
 
     /* This code is still right, though we do no longer write to the module
        config files any more. */
-    using SMCI = sword::SectionMap::const_iterator;
+    using SMCI = swordxx::SectionMap::const_iterator;
     SMCI it = m_backend.getConfig()->Sections.find(m_cachedName.toUtf8().constData());
     if (it == m_backend.getConfig()->Sections.end())
         return false;
 
-    const sword::ConfigEntMap & config = it->second;
+    const swordxx::ConfigEntMap & config = it->second;
     return config.find("CipherKey") != config.end();
 }
 
 bool CSwordModuleInfo::unlockKeyIsValid() const {
-    m_module.setPosition(sword::TOP);
+    m_module.setPosition(swordxx::TOP);
 
     /* This needs to use ::fromLatin1 because if the text is still locked, a lot
        of garbage will show up. It will also work with properly decrypted
@@ -180,8 +179,8 @@ bool CSwordModuleInfo::unlockKeyIsValid() const {
        and therefore contain no control (nonprintable) characters, which are all
        <127. */
     const QString test(isUnicode()
-                       ? QString::fromUtf8(m_module.getRawEntry())
-                       : QString::fromLatin1(m_module.getRawEntry()));
+                       ? QString::fromUtf8(m_module.getRawEntry().c_str())
+                       : QString::fromLatin1(m_module.getRawEntry().c_str()));
 
     if (test.isEmpty())
         return false;
@@ -296,9 +295,9 @@ void CSwordModuleInfo::buildIndex() {
         }
         else
         {
-            m_module.setPosition(sword::TOP);
+            m_module.setPosition(swordxx::TOP);
             verseLowIndex = m_module.getIndex();
-            m_module.setPosition(sword::BOTTOM);
+            m_module.setPosition(swordxx::BOTTOM);
             verseHighIndex = m_module.getIndex();
         }
 
@@ -315,8 +314,8 @@ void CSwordModuleInfo::buildIndex() {
 
         emit indexingProgress(0);
 
-        sword::SWKey * const key = m_module.getKey();
-        sword::VerseKey * const vk = dynamic_cast<sword::VerseKey *>(key);
+        swordxx::SWKey * const key = m_module.getKey();
+        swordxx::VerseKey * const vk = dynamic_cast<swordxx::VerseKey *>(key);
 
         if (vk) {
             /* We have to be sure to insert the english key into the index,
@@ -341,7 +340,7 @@ void CSwordModuleInfo::buildIndex() {
         if(bm)
             vk->setIndex(bm->lowerBound().getIndex());
         else
-            m_module.setPosition(sword::TOP);
+            m_module.setPosition(swordxx::TOP);
 
         while (!(m_module.popError()) && !CANCEL_INDEXING) {
 
@@ -365,7 +364,7 @@ void CSwordModuleInfo::buildIndex() {
             /* At this point we have to make sure we disabled the strongs and
                the other options, so the plain filters won't include the numbers
                somehow. */
-            textBuffer.append(m_module.stripText());
+            textBuffer.append(m_module.stripText().c_str());
             lucene_utf8towcs(wcharBuffer,
                              static_cast<const char *>(textBuffer),
                              BT_MAX_LUCENE_FIELD_LENGTH);
@@ -375,14 +374,14 @@ void CSwordModuleInfo::buildIndex() {
                                                    | lucene::document::Field::INDEX_TOKENIZED)));
             textBuffer.clear();
 
-            using ALI = sword::AttributeList::iterator;
-            using AVI = sword::AttributeValue::iterator;
+            using ALI = swordxx::AttributeList::iterator;
+            using AVI = swordxx::AttributeValue::iterator;
 
             for (ALI it = m_module.getEntryAttributes()["Footnote"].begin();
                  it != m_module.getEntryAttributes()["Footnote"].end();
                  ++it)
             {
-                lucene_utf8towcs(wcharBuffer, it->second["body"], BT_MAX_LUCENE_FIELD_LENGTH);
+                lucene_utf8towcs(wcharBuffer, it->second["body"].c_str(), BT_MAX_LUCENE_FIELD_LENGTH);
                 doc->add(*(new lucene::document::Field(static_cast<const TCHAR *>(_T("footnote")),
                                                        static_cast<const TCHAR *>(wcharBuffer),
                                                        lucene::document::Field::STORE_NO
@@ -394,7 +393,7 @@ void CSwordModuleInfo::buildIndex() {
                  it != m_module.getEntryAttributes()["Heading"]["Preverse"].end();
                  ++it)
             {
-                lucene_utf8towcs(wcharBuffer, it->second, BT_MAX_LUCENE_FIELD_LENGTH);
+                lucene_utf8towcs(wcharBuffer, it->second.c_str(), BT_MAX_LUCENE_FIELD_LENGTH);
                 doc->add(*(new lucene::document::Field(static_cast<const TCHAR *>(_T("heading")),
                                                        static_cast<const TCHAR *>(wcharBuffer),
                                                        lucene::document::Field::STORE_NO
@@ -406,15 +405,15 @@ void CSwordModuleInfo::buildIndex() {
                  it != m_module.getEntryAttributes()["Word"].end();
                  ++it)
             {
-                int partCount = QString(it->second["PartCount"]).toInt();
+                int partCount = QString::fromStdString(it->second["PartCount"]).toInt();
                 for (int i=0; i<partCount; i++) {
 
-                    sword::SWBuf lemmaKey = "Lemma";
+                    std::string lemmaKey = "Lemma";
                     if (partCount > 1)
-                        lemmaKey.appendFormatted(".%d", i+1);
-                    sword::AttributeValue::iterator lemmaIter = it->second.find(lemmaKey);
+                        lemmaKey += swordxx::formatted(".%d", i+1);
+                    swordxx::AttributeValue::iterator lemmaIter = it->second.find(lemmaKey);
                     if (lemmaIter != it->second.end()) {
-                        lucene_utf8towcs(wcharBuffer, it->second[lemmaKey], BT_MAX_LUCENE_FIELD_LENGTH);
+                        lucene_utf8towcs(wcharBuffer, it->second[lemmaKey].c_str(), BT_MAX_LUCENE_FIELD_LENGTH);
                         doc->add(*(new lucene::document::Field(static_cast<const TCHAR *>(_T("strong")),
                                                                static_cast<const TCHAR *>(wcharBuffer),
                                                                lucene::document::Field::STORE_NO
@@ -424,7 +423,7 @@ void CSwordModuleInfo::buildIndex() {
                 }
 
                 if (it->second.find("Morph") != it->second.end()) {
-                    lucene_utf8towcs(wcharBuffer, it->second["Morph"], BT_MAX_LUCENE_FIELD_LENGTH);
+                    lucene_utf8towcs(wcharBuffer, it->second["Morph"].c_str(), BT_MAX_LUCENE_FIELD_LENGTH);
                     doc->add(*(new lucene::document::Field(static_cast<const TCHAR *>(_T("morph")),
                                                            static_cast<const TCHAR *>(wcharBuffer),
                                                            lucene::document::Field::STORE_NO
@@ -497,8 +496,8 @@ size_t CSwordModuleInfo::indexSize() const {
 }
 
 size_t CSwordModuleInfo::searchIndexed(const QString & searchedText,
-                                       const sword::ListKey & scope,
-                                       sword::ListKey & results) const
+                                       const swordxx::ListKey & scope,
+                                       swordxx::ListKey & results) const
 {
     std::unique_ptr<char[]> sPutfBuffer(
             new char[BT_MAX_LUCENE_FIELD_LENGTH  + 1]);
@@ -509,14 +508,14 @@ size_t CSwordModuleInfo::searchIndexed(const QString & searchedText,
     wchar_t * const wcharBuffer = sPwcharBuffer.get();
     BT_ASSERT(wcharBuffer);
 
-    // work around Swords thread insafety for Bibles and Commentaries
+    // work around Sword++'s thread insafety for Bibles and Commentaries
     {
         std::unique_ptr<CSwordKey> key(CSwordKey::createInstance(this));
-        const sword::SWKey * const s = dynamic_cast<sword::SWKey *>(key.get());
+        const swordxx::SWKey * const s = dynamic_cast<swordxx::SWKey *>(key.get());
         if (s)
             m_module.setKey(*s);
     }
-    QList<sword::VerseKey *> list;
+    QList<swordxx::VerseKey *> list;
 
     results.clear();
 
@@ -540,9 +539,9 @@ size_t CSwordModuleInfo::searchIndexed(const QString & searchedText,
     const bool useScope = (scope.getCount() > 0);
 
     lucene::document::Document * doc = nullptr;
-    std::unique_ptr<sword::SWKey> swKey(m_module.createKey());
+    std::unique_ptr<swordxx::SWKey> swKey(m_module.createKey());
 
-    sword::VerseKey * const vk = dynamic_cast<sword::VerseKey *>(swKey.get());
+    swordxx::VerseKey * const vk = dynamic_cast<swordxx::VerseKey *>(swKey.get());
     if (vk)
         vk->setIntros(true);
 
@@ -562,8 +561,8 @@ size_t CSwordModuleInfo::searchIndexed(const QString & searchedText,
         // Limit results based on scope:
         if (useScope) {
             for (int j = 0; j < scope.getCount(); j++) {
-                BT_ASSERT(dynamic_cast<const sword::VerseKey *>(scope.getElement(j)));
-                const sword::VerseKey * const vkey = static_cast<const sword::VerseKey *>(scope.getElement(j));
+                BT_ASSERT(dynamic_cast<const swordxx::VerseKey *>(scope.getElement(j)));
+                const swordxx::VerseKey * const vkey = static_cast<const swordxx::VerseKey *>(scope.getElement(j));
                 if (vkey->getLowerBound().compare(*swKey) <= 0
                     && vkey->getUpperBound().compare(*swKey) >= 0)
                 {
@@ -582,9 +581,11 @@ size_t CSwordModuleInfo::searchIndexed(const QString & searchedText,
     return static_cast<size_t>(results.getCount());
 }
 
-sword::SWVersion CSwordModuleInfo::minimumSwordVersion() const {
-    return sword::SWVersion(config(CSwordModuleInfo::MinimumSwordVersion)
-                            .toUtf8().constData());
+swordxx::Version CSwordModuleInfo::minimumSwordxxVersion() const {
+    auto r(swordxx::parseVersion(
+               config(CSwordModuleInfo::MinimumSwordVersion).toUtf8()
+                                                            .constData()));
+    return r.first ? r.second : 0u;
 }
 
 QString CSwordModuleInfo::config(const CSwordModuleInfo::ConfigEntry entry) const {
@@ -985,16 +986,16 @@ QString CSwordModuleInfo::getSimpleConfigEntry(const QString & name) const {
 QString CSwordModuleInfo::getFormattedConfigEntry(const QString & name) const {
     const QStringList localeNames(QLocale(CSwordBackend::instance()->booknameLanguage()).uiLanguages());
     for (int i = localeNames.size() - 1; i >= -1; --i) {
-        sword::SWBuf RTF_Buffer =
+        auto * const entry =
                 m_module.getConfigEntry(
                     QString(i >= 0 ? name + "_" + localeNames[i] : name)
                         .toUtf8().constData());
-        if (RTF_Buffer.length() > 0) {
-            sword::RTFHTML RTF_Filter;
-            RTF_Filter.processText(RTF_Buffer, nullptr, nullptr);
+        if (entry) {
+            std::string rtfEntry(entry);
+            swordxx::RTFHTML().processText(rtfEntry, nullptr, nullptr);
             return isUnicode()
-                   ? QString::fromUtf8(RTF_Buffer.c_str())
-                   : QString::fromLatin1(RTF_Buffer.c_str());
+                   ? QString::fromUtf8(rtfEntry.c_str())
+                   : QString::fromLatin1(rtfEntry.c_str());
         }
     }
     return QString::null;

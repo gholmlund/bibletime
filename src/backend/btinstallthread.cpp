@@ -14,11 +14,9 @@
 #include <QDir>
 #include <QString>
 #include <QThread>
+#include <swordxx/filemgr.h>
 #include "btinstallbackend.h"
 #include "managers/cswordbackend.h"
-
-// Sword includes:
-#include <filemgr.h>
 
 
 namespace {
@@ -64,7 +62,7 @@ void BtInstallThread::installModule() {
 
     QVariant vModuleName = module->property("installSourceName");
     QString moduleName = vModuleName.toString();
-    sword::InstallSource installSource = BtInstallBackend::source(moduleName);
+    swordxx::InstallSource installSource = BtInstallBackend::source(moduleName);
     std::unique_ptr<CSwordBackend> backendForSource(BtInstallBackend::backend(installSource));
 
     // Check whether it's an update. If yes, remove existing module first:
@@ -73,7 +71,7 @@ void BtInstallThread::installModule() {
         return;
 
     // manager for the destination path
-    sword::SWMgr lMgr(m_destination.toLatin1());
+    swordxx::SWMgr lMgr(m_destination.toLatin1());
     if (BtInstallBackend::isRemote(installSource)) {
         int status = m_iMgr.installModule(&lMgr,
                                           nullptr,
@@ -129,7 +127,7 @@ bool BtInstallThread::removeModule() {
         prefixPath = QString::fromLatin1(CSwordBackend::instance()->prefixPath);
     }
 
-    sword::SWMgr mgr(prefixPath.toLatin1());
+    swordxx::SWMgr mgr(prefixPath.toLatin1());
     BtInstallMgr().removeModule(&mgr, m->name().toLatin1());
     return true;
 }

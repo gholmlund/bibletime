@@ -69,7 +69,7 @@ bool RawFiles::isWritable() {
  * RET: entry contents
  */
 
-SWBuf &RawFiles::getRawEntryBuf() {
+std::string &RawFiles::getRawEntryBuf() {
     FileDesc *datafile;
     long  start = 0;
     unsigned short size = 0;
@@ -79,7 +79,7 @@ SWBuf &RawFiles::getRawEntryBuf() {
 
     entryBuf = "";
     if (size) {
-        SWBuf tmpbuf = path;
+        std::string tmpbuf = path;
         tmpbuf += '/';
         readText(key->Testament(), start, size, entryBuf);
         tmpbuf += entryBuf;
@@ -117,14 +117,14 @@ void RawFiles::setEntry(const char *inbuf, long len) {
     findOffset(key->Testament(), key->TestamentIndex(), &start, &size);
 
     if (size) {
-        SWBuf tmpbuf;
+        std::string tmpbuf;
         entryBuf = path;
         entryBuf += '/';
         readText(key->Testament(), start, size, tmpbuf);
         entryBuf += tmpbuf;
     }
     else {
-        SWBuf tmpbuf;
+        std::string tmpbuf;
         entryBuf = path;
         entryBuf += '/';
         tmpbuf = getNextFilename();
@@ -155,7 +155,7 @@ void RawFiles::linkEntry(const SWKey *inkey) {
     findOffset(key->Testament(), key->TestamentIndex(), &start, &size);
 
     if (size) {
-        SWBuf tmpbuf;
+        std::string tmpbuf;
         readText(key->Testament(), start, size + 2, tmpbuf);
 
         key = &getVerseKey(inkey);
@@ -184,7 +184,7 @@ void RawFiles::deleteEntry() {
  */
 
 const char *RawFiles::getNextFilename() {
-    static SWBuf incfile;
+    static std::string incfile;
     __u32 number = 0;
     FileDesc *datafile;
 

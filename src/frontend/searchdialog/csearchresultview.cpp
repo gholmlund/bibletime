@@ -96,7 +96,7 @@ void CSearchResultView::initConnections() {
 
 /** Setups the list with the given module. */
 void CSearchResultView::setupTree(const CSwordModuleInfo *m,
-                                  const sword::ListKey & result)
+                                  const swordxx::ListKey & result)
 {
     clear();
 

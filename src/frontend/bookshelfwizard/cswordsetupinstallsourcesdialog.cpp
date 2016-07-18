@@ -110,7 +110,7 @@ void CSwordSetupInstallSourcesDialog::slotOk() {
 
     //BTInstallMgr iMgr;
     //sword::InstallSource is = BTInstallMgr::Tool::RemoteConfig::source( &iMgr, m_captionEdit->text() );
-    sword::InstallSource is = BtInstallBackend::source(m_captionEdit->text());
+    swordxx::InstallSource is = BtInstallBackend::source(m_captionEdit->text());
     if (is.caption.c_str() == m_captionEdit->text()) { // source already exists
         message::showInformation( this, tr( "Error" ),
                                tr("A source with this caption already exists. Please provide a different caption."));
@@ -215,8 +215,8 @@ void CSwordSetupInstallSourcesDialog::slotRefreshCanceled() {
     qApp->processEvents();
 }
 
-sword::InstallSource CSwordSetupInstallSourcesDialog::getSource() {
-    sword::InstallSource newSource(""); //empty, invalid Source
+swordxx::InstallSource CSwordSetupInstallSourcesDialog::getSource() {
+    swordxx::InstallSource newSource(""); //empty, invalid Source
     if (this->isRemote(m_protocolCombo->currentText())) {
         if (m_protocolCombo->currentText() == PROTO_FTP) {
             newSource.type = "FTP";
@@ -230,18 +230,18 @@ sword::InstallSource CSwordSetupInstallSourcesDialog::getSource() {
             else if (m_protocolCombo->currentText() == PROTO_HTTPS) {
                 newSource.type = "HTTPS";
             }
-            newSource.source = m_serverEdit->text().toUtf8();
+            newSource.source = m_serverEdit->text().toUtf8().constData();
         //a message to the user would be nice, but we're in message freeze right now (1.5.1)
         if (m_serverEdit->text().right(1) == "/") { //remove a trailing slash
-            newSource.source  = m_serverEdit->text().mid(0, m_serverEdit->text().length() - 1).toUtf8();
+            newSource.source  = m_serverEdit->text().mid(0, m_serverEdit->text().length() - 1).toUtf8().constData();
         }
     }
     else {
         newSource.type = "DIR";
         newSource.source = "local";
     }
-    newSource.caption = m_captionEdit->text().toUtf8();
-    newSource.directory = m_pathEdit->text().toUtf8();
+    newSource.caption = m_captionEdit->text().toUtf8().constData();
+    newSource.directory = m_pathEdit->text().toUtf8().constData();
     newSource.uid = newSource.source;
 
     return newSource;

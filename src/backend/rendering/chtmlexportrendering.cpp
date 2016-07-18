@@ -144,9 +144,9 @@ QString CHTMLExportRendering::renderEntry(KeyTreeItem const & i, CSwordKey * k)
             // only process EntryAttributes, do not render, this might destroy the EntryAttributes again
             swModule.renderText(nullptr, -1, 0);
 
-            sword::AttributeValue::const_iterator it =
+            swordxx::AttributeValue::const_iterator it =
                 swModule.getEntryAttributes()["Heading"]["Preverse"].begin();
-            sword::AttributeValue::const_iterator const end =
+            swordxx::AttributeValue::const_iterator const end =
                 swModule.getEntryAttributes()["Heading"]["Preverse"].end();
 
             for (; it != end; ++it) {

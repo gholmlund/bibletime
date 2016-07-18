@@ -108,7 +108,7 @@ public: /* Methods: */
     void setDescription(const QModelIndex & index, const QString & description);
 
     /**
-      \returns sword module for specified index if have.
+      \returns Sword++ module for specified index if have.
      */
     CSwordModuleInfo * module(const QModelIndex & index) const;
 

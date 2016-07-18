@@ -44,7 +44,7 @@ std::unique_ptr<QDir> cachedUserCacheDir;
 std::unique_ptr<QDir> cachedUserIndexDir;
 std::unique_ptr<QDir> cachedSwordPathDir;
 #ifdef Q_OS_WIN
-std::unique_ptr<QDir> cachedApplicationSwordDir; // Only Windows installs the sword directory which contains locales.d
+std::unique_ptr<QDir> cachedApplicationSwordDir; // Only Windows installs the Sword++ directory which contains locales.d
 std::unique_ptr<QDir> cachedSharedSwordDir;
 #endif
 
@@ -59,17 +59,17 @@ static const char AND_BIBLE[] = "/sdcard/Android/data/net.bible.android.activity
 
 #if defined Q_OS_WIN || defined Q_OS_SYMBIAN
 static const char BIBLETIME[] = "Bibletime";
-static const char SWORD_DIR[] = "Sword";
+static const char SWORDXX_DIR[] = "Swordxx";
 #else
 #ifdef Q_OS_MAC
 static const char BIBLETIME[] = "Library/Application Support/BibleTime";
-static const char SWORD_DIR[] = "Library/Application Support/Sword";
+static const char SWORDXX_DIR[] = "Library/Application Support/Swordxx";
 #else
 static const char BIBLETIME[] = ".bibletime";
-static const char SWORD_DIR[] = ".sword";
+static const char SWORDXX_DIR[] = ".swordxx";
 #endif
 #endif
-static const char SWORD_PATH[] = "SWORD_PATH";
+static const char SWORDXX_PATH[] = "SWORDXX_PATH";
 } // anonymous namespace
 
 bool initDirectoryCache() {
@@ -95,23 +95,23 @@ bool initDirectoryCache() {
 
 
 #ifdef Q_OS_WIN
-    cachedApplicationSwordDir.reset(new QDir(wDir)); // application sword dir for Windows only
+    cachedApplicationSwordDir.reset(new QDir(wDir)); // application Sword++ dir for Windows only
 #if !defined BT_MINI && !defined BT_MOBILE
-    if (!cachedApplicationSwordDir->cd("share/sword") || !cachedApplicationSwordDir->isReadable()) {
-        qWarning() << "Cannot find sword directory relative to" << QCoreApplication::applicationDirPath();
+    if (!cachedApplicationSwordDir->cd("share/swordxx") || !cachedApplicationSwordDir->isReadable()) {
+        qWarning() << "Cannot find Sword++ directory relative to" << QCoreApplication::applicationDirPath();
         return false;
     }
 #endif
 
 #if !defined Q_OS_WINCE && !defined BT_MOBILE && !defined Q_OS_WINRT
-    cachedSharedSwordDir.reset(new QDir(qgetenv("ALLUSERSPROFILE"))); // sword dir for Windows only
+    cachedSharedSwordDir.reset(new QDir(qgetenv("ALLUSERSPROFILE"))); // Sword++ dir for Windows only
     if (!cachedSharedSwordDir->cd("Application Data")) {
         qWarning() << "Cannot find ALLUSERSPROFILE\\Application Data";
         return false;
     }
-    if (!cachedSharedSwordDir->cd(SWORD_DIR)) {
-        if (!cachedSharedSwordDir->mkdir(SWORD_DIR) || !cachedSharedSwordDir->cd(SWORD_DIR)) {
-            qWarning() << "Cannot find ALLUSERSPROFILE\\Application Data\\Sword";
+    if (!cachedSharedSwordDir->cd(SWORDXX_DIR)) {
+        if (!cachedSharedSwordDir->mkdir(SWORDXX_DIR) || !cachedSharedSwordDir->cd(SWORDXX_DIR)) {
+            qWarning() << "Cannot find ALLUSERSPROFILE\\Application Data\\Swordxx";
             return false;
         }
     }
@@ -119,9 +119,9 @@ bool initDirectoryCache() {
 #endif
 
 #ifdef Q_OS_MAC
-    cachedSwordLocalesDir.reset(new QDir(wDir)); // application sword dir for Windows only
-    if (!cachedSwordLocalesDir->cd("share/sword/locales.d") || !cachedSwordLocalesDir->isReadable()) {
-        qWarning() << "Cannot find sword locales directory relative to" << QCoreApplication::applicationDirPath();
+    cachedSwordLocalesDir.reset(new QDir(wDir)); // application Sword++ dir for Windows only
+    if (!cachedSwordLocalesDir->cd("share/swordxx/locales.d") || !cachedSwordLocalesDir->isReadable()) {
+        qWarning() << "Cannot find Sword++ locales directory relative to" << QCoreApplication::applicationDirPath();
         return false;
     }
 #endif
@@ -131,11 +131,11 @@ bool initDirectoryCache() {
 #elif defined (ANDROID)
 #else
     cachedSwordPathDir.reset(new QDir());
-    auto swordPath(qgetenv(SWORD_PATH));
+    auto swordPath(qgetenv(SWORDXX_PATH));
     if (swordPath.data()) {
         cachedSwordPathDir.reset(new QDir(swordPath.data()));
-        // We unset the SWORD_PATH so libsword finds paths correctly
-        qputenv(SWORD_PATH, "");
+        // We unset the SWORDXX_PATH so libsword++ finds paths correctly
+        qputenv(SWORDXX_PATH, "");
     }
 #endif
 
@@ -244,9 +244,9 @@ bool initDirectoryCache() {
     cachedUserHomeSwordDir.reset(new QDir(*cachedUserHomeDir));
 #if defined(Q_OS_WIN) && !defined(Q_OS_WIN32)
 #else
-    if (!cachedUserHomeSwordDir->cd(SWORD_DIR)) {
-        if (!cachedUserHomeSwordDir->mkpath(SWORD_DIR) || !cachedUserHomeSwordDir->cd(SWORD_DIR)) {
-            qWarning() << "Could not create user home " << SWORD_DIR << " directory.";
+    if (!cachedUserHomeSwordDir->cd(SWORDXX_DIR)) {
+        if (!cachedUserHomeSwordDir->mkpath(SWORDXX_DIR) || !cachedUserHomeSwordDir->cd(SWORDXX_DIR)) {
+            qWarning() << "Could not create user home " << SWORDXX_DIR << " directory.";
             return false;
         }
     }
@@ -254,13 +254,13 @@ bool initDirectoryCache() {
 
 #if defined Q_OS_ANDROID || defined Q_OS_SYMBIAN
     // help for SWMgr to find the right place
-    qputenv(SWORD_PATH, cachedUserHomeSwordDir->absolutePath().toLocal8Bit());
+    qputenv(SWORDXX_PATH, cachedUserHomeSwordDir->absolutePath().toLocal8Bit());
 #endif
 
     cachedUserHomeSwordModsDir.reset(new QDir(*cachedUserHomeSwordDir));
     if (!cachedUserHomeSwordModsDir->cd("mods.d")) {
         if (!cachedUserHomeSwordModsDir->mkdir("mods.d") || !cachedUserHomeSwordModsDir->cd("mods.d")) {
-            qWarning() << "Could not create user home " << SWORD_DIR << " mods.d directory.";
+            qWarning() << "Could not create user home " << SWORDXX_DIR << " mods.d directory.";
             return false;
         }
     }

@@ -12,15 +12,13 @@
 #include <memory>
 #include <QRegExp>
 #include <QtAlgorithms>
+#include <swordxx/swkey.h>
 #include "../../util/btassert.h"
 #include "../drivers/cswordmoduleinfo.h"
 #include "../keys/cswordkey.h"
 #include "../keys/cswordversekey.h"
 #include "../managers/cdisplaytemplatemgr.h"
 #include "../managers/referencemanager.h"
-
-// Sword includes:
-#include <swkey.h>
 
 
 using namespace Rendering;
@@ -133,7 +131,7 @@ CTextRendering::KeyTreeItem::KeyTreeItem(const QString &startKey,
         m_alternativeContent = startKey;
     }
     else {
-        sword::VerseKey vk(startKey.toUtf8().constData(), stopKey.toUtf8().constData());
+        swordxx::VerseKey vk(startKey.toUtf8().constData(), stopKey.toUtf8().constData());
 
         if (vk.getLowerBound().getBook() != vk.getUpperBound().getBook()) {
             m_alternativeContent = QString::fromUtf8(vk.getRangeText());
@@ -211,8 +209,8 @@ const QString CTextRendering::renderKeyRange(
     std::unique_ptr<CSwordKey> upperBound( CSwordKey::createInstance(module) );
     upperBound->setKey(stop);
 
-    sword::SWKey* sw_start = dynamic_cast<sword::SWKey*>(lowerBound.get());
-    sword::SWKey* sw_stop = dynamic_cast<sword::SWKey*>(upperBound.get());
+    swordxx::SWKey* sw_start = dynamic_cast<swordxx::SWKey*>(lowerBound.get());
+    swordxx::SWKey* sw_stop = dynamic_cast<swordxx::SWKey*>(upperBound.get());
 
     BT_ASSERT((*sw_start == *sw_stop) || (*sw_start < *sw_stop));
 

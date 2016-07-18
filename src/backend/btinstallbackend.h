@@ -14,10 +14,8 @@
 
 #include <QDir>
 #include <QString>
+#include <swordxx/installmgr.h>
 #include "managers/cswordbackend.h"
-
-// Sword includes:
-#include <installmgr.h>
 
 
 class CSwordModuleInfo;
@@ -25,10 +23,10 @@ class CSwordModuleInfo;
 namespace BtInstallBackend {
 
 /** Adds the source to the backend. */
-bool addSource(sword::InstallSource& source);
+bool addSource(swordxx::InstallSource& source);
 
 /** Returns the source struct. */
-sword::InstallSource source(const QString &name);
+swordxx::InstallSource source(const QString &name);
 
 /** Deletes the source. */
 bool deleteSource(const QString &name);
@@ -37,20 +35,20 @@ bool deleteSource(const QString &name);
 QList<CSwordModuleInfo*> moduleList(const QString &name);
 
 /** Tells if the source is remote or local. */
-bool isRemote(const sword::InstallSource& source);
+bool isRemote(const swordxx::InstallSource& source);
 
 /** Returns the list of available install target paths. */
 QStringList targetList();
 
-/** Saves the list of available install target paths to the sword config. Return success indicator.*/
+/** Saves the list of available install target paths to the Sword++ config. Return success indicator.*/
 bool setTargetList( const QStringList& targets );
 
 QStringList sourceNameList();
 
-/** Returns the path of the sword installer configuration file. */
+/** Returns the path of the Sword++ installer configuration file. */
 QString configPath();
 
-/** Returns the name of the sword installer configuration file. */
+/** Returns the name of the Sword++ installer configuration file. */
 QString configFilename();
 
 /** Sets the passive mode for as default.
@@ -58,15 +56,15 @@ QString configFilename();
 */
 void initPassiveFtpMode();
 
-/** Returns the file name for the Sword config file. */
+/** Returns the file name for the Sword++ config file. */
 QString swordConfigFilename();
 
-/** Returns the Sword directory ($HOME/.sword/) as a QDir, created with absolute path (not canonical).
+/** Returns the Sword++ directory ($HOME/.swordxx/) as a QDir, created with absolute path (not canonical).
 */
 QDir swordDir();
 
-/** Returns backend Sword manager for the source. */
-CSwordBackend * backend(const sword::InstallSource & is);
+/** Returns backend Sword++ manager for the source. */
+CSwordBackend * backend(const swordxx::InstallSource & is);
 
 } // namespace BtInstallBackend
 

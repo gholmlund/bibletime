@@ -321,7 +321,7 @@ const QString ReferenceManager::parseVerseReference( const QString& ref, const R
     QString sourceLanguage = options.sourceLanguage;
     QString destinationLanguage = options.destinationLanguage;
 
-    sword::StringList locales = sword::LocaleMgr::getSystemLocaleMgr()->getAvailableLocales();
+    swordxx::StringList locales = swordxx::LocaleMgr::getSystemLocaleMgr()->getAvailableLocales();
     if (/*options.sourceLanguage == "en" ||*/ std::find(locales.begin(), locales.end(), sourceLanguage.toUtf8().constData()) == locales.end()) { //sourceLanguage not available
         sourceLanguage = "en_US";
     }
@@ -343,7 +343,7 @@ const QString ReferenceManager::parseVerseReference( const QString& ref, const R
     const QString oldLocaleName = CSwordBackend::instance()->booknameLanguage();
     CSwordBackend::instance()->booknameLanguage(sourceLanguage);
 
-    sword::VerseKey dummy;
+    swordxx::VerseKey dummy;
     dummy.setLocale( sourceLanguage.toUtf8().constData() );
     BT_ASSERT(!strcmp(dummy.getLocale(), sourceLanguage.toUtf8().constData()));
 
@@ -351,7 +351,7 @@ const QString ReferenceManager::parseVerseReference( const QString& ref, const R
 
     for (QStringList::iterator it = refList.begin(); it != refList.end(); ++it) {
         //The listkey may contain more than one item, because a ref lik "Gen 1:3,5" is parsed into two single refs
-        sword::ListKey lk = dummy.parseVerseList((*it).toUtf8().constData(), baseKey.key().toUtf8().constData(), true);
+        swordxx::ListKey lk = dummy.parseVerseList((*it).toUtf8().constData(), baseKey.key().toUtf8().constData(), true);
         BT_ASSERT(!dummy.popError());
 
         //BT_ASSERT(lk.Count());
@@ -361,15 +361,15 @@ const QString ReferenceManager::parseVerseReference( const QString& ref, const R
         }
 
         for (int i = 0; i < lk.getCount(); ++i) {
-            if (dynamic_cast<sword::VerseKey*>(lk.getElement(i))) { // a range
-                sword::VerseKey* k = dynamic_cast<sword::VerseKey*>(lk.getElement(i));
+            if (dynamic_cast<swordxx::VerseKey*>(lk.getElement(i))) { // a range
+                swordxx::VerseKey* k = dynamic_cast<swordxx::VerseKey*>(lk.getElement(i));
                 BT_ASSERT(k);
                 k->setLocale( destinationLanguage.toUtf8().constData() );
 
                 ret.append( QString::fromUtf8(k->getRangeText()) ).append("; ");
             }
             else { // a single ref
-                sword::VerseKey vk;
+                swordxx::VerseKey vk;
                 vk.setLocale( sourceLanguage.toUtf8().constData() );
                 vk = lk.getElement(i)->getText();
                 vk.setLocale( destinationLanguage.toUtf8().constData() );

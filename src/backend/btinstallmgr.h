@@ -13,10 +13,8 @@
 #define BTINSTALLMGR_H
 
 #include <QObject>
-
-// Sword includes:
-#include <installmgr.h>
-#include <remotetrans.h>
+#include <swordxx/installmgr.h>
+#include <swordxx/remotetrans.h>
 
 
 /**
@@ -24,8 +22,8 @@
 */
 class BtInstallMgr
         : public QObject
-        , public sword::InstallMgr
-        , public sword::StatusReporter
+        , public swordxx::InstallMgr
+        , public swordxx::StatusReporter
 {
 
     Q_OBJECT
@@ -49,19 +47,19 @@ signals:
 
 protected: /* Methods: */
 
-    /** \note Reimplementation of sword::StatusReporter::statusUpdate(). */
-    void statusUpdate(double dltotal, double dlnow) override;
+    /** \note Reimplementation of swordxx::StatusReporter::statusUpdate(). */
+    void update(std::size_t dltotal, std::size_t dlnow) noexcept override;
 
     /**
-    * \note Reimplementation of sword::StatusReporter::preStatus().
+    * \note Reimplementation of swordxx::StatusReporter::preStatus().
     * \warning This method is not always called before statusUpdate().
     * Called before starting to download each file of the module package.
-    * The sword message is not i18n'ed, it's in the form "Downloading (1 of 6): nt.bzs".
+    * The Sword++ message is not i18n'ed, it's in the form "Downloading (1 of 6): nt.bzs".
     * This function is not utilized in the UI ATM.
     */
-    void preStatus(long totalBytes,
-                   long completedBytes,
-                   const char * message) override;
+    void preStatus(std::size_t totalBytes,
+                   std::size_t completedBytes,
+                   const char * message) noexcept override;
 
 private: /* Fields: */
 

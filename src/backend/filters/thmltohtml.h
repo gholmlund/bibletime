@@ -12,9 +12,7 @@
 #ifndef FILTERS_THMLTOHTML_H
 #define FILTERS_THMLTOHTML_H
 
-// Sword includes:
-#include <swbuf.h>
-#include <thmlhtml.h>
+#include <swordxx/filters/thmlhtml.h>
 
 
 namespace Filters {
@@ -22,13 +20,13 @@ namespace Filters {
 /**
   \brief ThML to HTML conversion filter.
 */
-class ThmlToHtml: public sword::ThMLHTML {
+class ThmlToHtml: public swordxx::ThMLHTML {
     protected: /* Types: */
-        class UserData: public sword::ThMLHTML::MyUserData {
+        class UserData: public swordxx::ThMLHTML::MyUserData {
             public:
-                inline UserData(const sword::SWModule *module,
-                                const sword::SWKey *key)
-                    : sword::ThMLHTML::MyUserData(module, key),
+                inline UserData(const swordxx::SWModule *module,
+                                const swordxx::SWKey *key)
+                    : swordxx::ThMLHTML::MyUserData(module, key),
                       inscriptRef(false), inFootnoteTag(false),
                       swordFootnote(1) {}
 
@@ -40,18 +38,18 @@ class ThmlToHtml: public sword::ThMLHTML {
     public: /* Methods: */
         ThmlToHtml();
 
-        bool handleToken(sword::SWBuf &buf,
+        bool handleToken(std::string &buf,
                          const char *token,
-                         sword::BasicFilterUserData *userData) override;
+                         swordxx::BasicFilterUserData *userData) override;
 
-        char processText(sword::SWBuf &buf,
-                         const sword::SWKey *key,
-                         const sword::SWModule *module = nullptr) override;
+        char processText(std::string &buf,
+                         const swordxx::SWKey *key,
+                         const swordxx::SWModule *module = nullptr) override;
 
     protected: /* Methods: */
 
-        inline sword::BasicFilterUserData *createUserData(
-                const sword::SWModule *module, const sword::SWKey *key) override
+        inline swordxx::BasicFilterUserData *createUserData(
+                const swordxx::SWModule *module, const swordxx::SWKey *key) override
         {
             return new UserData(module, key);
         }

@@ -13,11 +13,8 @@
 #include <QDataStream>
 #include <QTextCodec>
 #include <QDebug>
-
+#include <swordxx/swmodule.h>
 #include "../../util/directory.h"
-
-// Sword includes:
-#include <swmodule.h>
 
 
 //Change it once the format changed to make all systems rebuild their caches
@@ -71,7 +68,7 @@ const QStringList &CSwordLexiconModuleInfo::entries() const {
 
     auto & m = module();
     m.setSkipConsecutiveLinks(true);
-    m.setPosition(sword::TOP);
+    m.setPosition(swordxx::TOP);
     snap(); //snap to top entry
 
     do {
@@ -87,7 +84,7 @@ const QStringList &CSwordLexiconModuleInfo::entries() const {
         m.increment();
     } while (!m.popError());
 
-    m.setPosition(sword::TOP); // back to the first entry
+    m.setPosition(swordxx::TOP); // back to the first entry
     m.setSkipConsecutiveLinks(false);
 
     /// \todo Document why the following code is here:

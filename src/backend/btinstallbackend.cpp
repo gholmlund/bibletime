@@ -13,56 +13,54 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <string>
+#include <swordxx/filemgr.h>
+#include <swordxx/swconfig.h>
 #include "../util/btassert.h"
 #include "../util/directory.h"
 #include "managers/cswordbackend.h"
 #include "btinstallmgr.h"
 
-// Sword includes:
-#include <filemgr.h>
-#include <swconfig.h>
-#include <swbuf.h>
 
-
-using namespace sword;
+using namespace swordxx;
 
 namespace BtInstallBackend {
 
 /** Adds the source described by Source to the backend. */
-bool addSource(sword::InstallSource& source) {
+bool addSource(swordxx::InstallSource& source) {
     SWConfig config(configFilename().toLatin1());
     if (isRemote(source)) {
         if (source.directory[ source.directory.length()-1 ] == '/') {
-            source.directory--;
+            source.directory.pop_back();
         }
-    if (!strcmp(source.type, "FTP")) {
-            config["Sources"].insert( std::make_pair(SWBuf("FTPSource"), source.getConfEnt()) );
+    if (!strcmp(source.type.c_str(), "FTP")) {
+            config["Sources"].insert( std::make_pair(std::string("FTPSource"), source.getConfEnt()) );
         }
-        else if (!strcmp(source.type, "SFTP")) {
-            config["Sources"].insert( std::make_pair(SWBuf("SFTPSource"), source.getConfEnt()) );
+        else if (!strcmp(source.type.c_str(), "SFTP")) {
+            config["Sources"].insert( std::make_pair(std::string("SFTPSource"), source.getConfEnt()) );
         }
-        else if (!strcmp(source.type, "HTTP")) {
-            config["Sources"].insert( std::make_pair(SWBuf("HTTPSource"), source.getConfEnt()) );
+        else if (!strcmp(source.type.c_str(), "HTTP")) {
+            config["Sources"].insert( std::make_pair(std::string("HTTPSource"), source.getConfEnt()) );
         }
-        else if (!strcmp(source.type, "HTTPS")) {
-            config["Sources"].insert( std::make_pair(SWBuf("HTTPSSource"), source.getConfEnt()) );
+        else if (!strcmp(source.type.c_str(), "HTTPS")) {
+            config["Sources"].insert( std::make_pair(std::string("HTTPSSource"), source.getConfEnt()) );
         }
     }
-    else if (!strcmp(source.type, "DIR")) {
-        config["Sources"].insert( std::make_pair(SWBuf("DIRSource"), source.getConfEnt()) );
+    else if (!strcmp(source.type.c_str(), "DIR")) {
+        config["Sources"].insert( std::make_pair(std::string("DIRSource"), source.getConfEnt()) );
     }
     config.Save();
     return true;
 }
 
 /** Returns the Source struct. */
-sword::InstallSource source(const QString &name) {
+swordxx::InstallSource source(const QString &name) {
     BtInstallMgr mgr;
     InstallSourceMap::iterator source = mgr.sources.find(name.toLatin1().data());
     if (source != mgr.sources.end()) {
         return *(source->second);
     }
-    else { //not found in Sword, may be a local DIR source
+    else { //not found in Sword++, may be a local DIR source
         SWConfig config(configFilename().toLatin1());
         SectionMap::iterator sourcesSection = config.Sections.find("Sources");
         if (sourcesSection != config.Sections.end()) {
@@ -73,7 +71,7 @@ sword::InstallSource source(const QString &name) {
 
             while (sourceBegin != sourceEnd) {
                 InstallSource is("DIR", sourceBegin->second.c_str());
-                if (!strcmp(is.caption, name.toLatin1()) ) { //found local dir source
+                if (!strcmp(is.caption.c_str(), name.toLatin1())) { //found local dir source
                     return is;
                 }
 
@@ -91,12 +89,12 @@ sword::InstallSource source(const QString &name) {
 
 /** Deletes the source. */
 bool deleteSource(const QString &name) {
-    sword::InstallSource is = source(name );
+    swordxx::InstallSource is = source(name );
 
     SWConfig config(configFilename().toLatin1());
 
     //this code can probably be shortened by using the stl remove_if functionality
-    SWBuf sourceConfigEntry = is.getConfEnt();
+    std::string sourceConfigEntry = is.getConfEnt();
     bool notFound = true;
     ConfigEntMap::iterator it = config["Sources"].begin();
     while (it != config["Sources"].end()) {
@@ -117,7 +115,7 @@ bool deleteSource(const QString &name) {
         sce = l.join("|").append("|");
         it = config["Sources"].begin();
         while (it != config["Sources"].end()) {
-            if (it->second == sce) {
+            if (QString::fromStdString(it->second) == sce) {
                 config["Sources"].erase(it);
                 break;
             }
@@ -137,11 +135,11 @@ QList<CSwordModuleInfo*> moduleList(QString name) {
     return QList<CSwordModuleInfo*>();
 }
 
-bool isRemote(const sword::InstallSource& source) {
-    return !strcmp(source.type, "FTP") ||
-            !strcmp(source.type, "SFTP") ||
-            !strcmp(source.type, "HTTP") ||
-            !strcmp(source.type, "HTTPS");
+bool isRemote(const swordxx::InstallSource& source) {
+    return !strcmp(source.type.c_str(), "FTP") ||
+            !strcmp(source.type.c_str(), "SFTP") ||
+            !strcmp(source.type.c_str(), "HTTP") ||
+            !strcmp(source.type.c_str(), "HTTPS");
 }
 
 QString configPath() {
@@ -160,20 +158,20 @@ QStringList targetList() {
 bool setTargetList( const QStringList& targets ) {
     namespace DU = util::directory;
 
-    //saves a new Sword config using the provided target list
-    //QString filename = KGlobal::dirs()->saveLocation("data", "bibletime/") + "sword.conf"; //default is to assume the real location isn't writable
-    //QString filename = util::DirectoryUtil::getUserBaseDir().canonicalPath().append("/.sword/sword.conf");
+    //saves a new Sword++ config using the provided target list
+    //QString filename = KGlobal::dirs()->saveLocation("data", "bibletime/") + "swordxx.conf"; //default is to assume the real location isn't writable
+    //QString filename = util::DirectoryUtil::getUserBaseDir().canonicalPath().append("/.swordxx/swordxx.conf");
     //bool directAccess = false;
     QString filename = swordConfigFilename();
     {
         QFile f(filename);
         if (!f.exists()) {
             if (!f.open(QIODevice::ReadWrite)) {
-                qWarning() << "The Sword config file can't be created!";
+                qWarning() << "The Sword++ config file can't be created!";
                 return false;
             }
             f.close();
-            qDebug() << "The Sword config file \"" << filename
+            qDebug() << "The Sword++ config file \"" << filename
                      << "\" had to be (re)created!";
         }
     }
@@ -183,10 +181,10 @@ bool setTargetList( const QStringList& targets ) {
     conf.Sections.clear();
 
 #ifdef Q_OS_WIN
-    // On Windows, add the sword directory to the config file.
+    // On Windows, add the Sword++ directory to the config file.
     QString swordPath = DU::convertDirSeparators( DU::getApplicationSwordDir().absolutePath());
     conf["Install"].insert(
-        std::make_pair( SWBuf("LocalePath"), swordPath.toLocal8Bit().data() )
+        std::make_pair(std::string("LocalePath"), swordPath.toLocal8Bit().data())
     );
 #endif
 
@@ -194,20 +192,24 @@ bool setTargetList( const QStringList& targets ) {
     for (QStringList::const_iterator it = targets.begin(); it != targets.end(); ++it) {
         QString t = DU::convertDirSeparators(*it);
 #ifdef Q_OS_WIN
-        if (t.contains(DU::convertDirSeparators(DU::getUserHomeDir().canonicalPath().append("\\Sword")))) {
+        if (t.contains(DU::convertDirSeparators(DU::getUserHomeDir().canonicalPath().append("\\Swordxx")))) {
 #else
-        if (t.contains(DU::getUserHomeDir().canonicalPath().append("/.sword"))) {
+        if (t.contains(DU::getUserHomeDir().canonicalPath().append("/.swordxx"))) {
 #endif
-            //we don't want $HOME/.sword in the config
+            //we don't want $HOME/.swordxx in the config
             continue;
         }
         else {
             qDebug() << "Add path to the conf file" << filename << ":" << t;
-            conf["Install"].insert( std::make_pair(!setDataPath ? SWBuf("DataPath") : SWBuf("AugmentPath"), t.toLocal8Bit().data()) );
+            conf["Install"].insert(
+                        std::make_pair(std::string(!setDataPath
+                                                   ? "DataPath"
+                                                   : "AugmentPath"),
+                                       t.toLocal8Bit().data()));
             setDataPath = true;
         }
     }
-    qDebug() << "Saving Sword configuration ...";
+    qDebug() << "Saving Sword++ configuration ...";
     conf.Save();
     CSwordBackend::instance()->reloadModules(CSwordBackend::PathChanged);
     return true;
@@ -219,17 +221,17 @@ QStringList sourceNameList() {
 
     QStringList names;
 
-    //add Sword remote sources
+    //add Sword++ remote sources
     for (InstallSourceMap::iterator it = mgr.sources.begin(); it != mgr.sources.end(); ++it) {
-        names << QString::fromLocal8Bit(it->second->caption);
+        names << QString::fromLocal8Bit(it->second->caption.c_str());
     }
 
     // Add local directory sources
     SWConfig config(configFilename().toLatin1());
-    sword::SectionMap::iterator sourcesSection = config.Sections.find("Sources");
+    swordxx::SectionMap::iterator sourcesSection = config.Sections.find("Sources");
     if (sourcesSection != config.Sections.end()) {
-        sword::ConfigEntMap::iterator sourceBegin = sourcesSection->second.lower_bound("DIRSource");
-        sword::ConfigEntMap::iterator sourceEnd = sourcesSection->second.upper_bound("DIRSource");
+        swordxx::ConfigEntMap::iterator sourceBegin = sourcesSection->second.lower_bound("DIRSource");
+        swordxx::ConfigEntMap::iterator sourceEnd = sourcesSection->second.upper_bound("DIRSource");
 
         while (sourceBegin != sourceEnd) {
             InstallSource is("DIR", sourceBegin->second.c_str());
@@ -251,14 +253,14 @@ void initPassiveFtpMode() {
 QString swordConfigFilename() {
     namespace DU = util::directory;
 
-    qDebug() << "Sword config:"
+    qDebug() << "Sword++ config:"
 #ifdef Q_OS_WIN
-             << DU::getUserHomeDir().absolutePath().append("/Sword/sword.conf");
-    return DU::getUserHomeDir().absolutePath().append("/Sword/sword.conf");
-//    return DU::getApplicationDir().absolutePath().append("/sword.conf");
+             << DU::getUserHomeDir().absolutePath().append("/Swordxx/swordxx.conf");
+    return DU::getUserHomeDir().absolutePath().append("/Swordxx/swordxx.conf");
+//    return DU::getApplicationDir().absolutePath().append("/swordxx.conf");
 #else
-             << DU::getUserHomeDir().absolutePath().append("/.sword/sword.conf");
-    return DU::getUserHomeDir().absolutePath().append("/.sword/sword.conf");
+             << DU::getUserHomeDir().absolutePath().append("/.swordxx/swordxx.conf");
+    return DU::getUserHomeDir().absolutePath().append("/.swordxx/swordxx.conf");
 #endif
 }
 
@@ -266,13 +268,13 @@ QDir swordDir() {
     namespace DU = util::directory;
 
 #ifdef Q_OS_WIN
-    return QDir(DU::getUserHomeDir().absolutePath().append("/Sword/"));
+    return QDir(DU::getUserHomeDir().absolutePath().append("/Swordxx/"));
 #else
-    return QDir(DU::getUserHomeDir().absolutePath().append("/.sword/"));
+    return QDir(DU::getUserHomeDir().absolutePath().append("/.swordxx/"));
 #endif
 }
 
-CSwordBackend * backend(const sword::InstallSource & is) {
+CSwordBackend * backend(const swordxx::InstallSource & is) {
     /// \anchor BackendNotSingleton
     CSwordBackend * const ret = new CSwordBackend(isRemote(is)
                                                   ? is.localShadow.c_str()

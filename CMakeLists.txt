@@ -121,16 +121,15 @@ FIND_PACKAGE(Qt5Core REQUIRED)
 FIND_PACKAGE(Qt5LinguistTools REQUIRED)
 FIND_PACKAGE(Qt5Gui REQUIRED)
 FIND_PACKAGE(Qt5Widgets REQUIRED)
-
 FIND_PACKAGE(CLucene REQUIRED)
-FIND_PACKAGE(Sword 1.7.0 REQUIRED)
+FIND_PACKAGE(Swordxx 2.0.0 REQUIRED)
+ADD_DEFINITIONS("${Swordxx_DEFINITIONS}")
 
 ADD_COMPILE_OPTIONS(
   "-O2"
   "-DBT_VERSION=\"${BT_VERSION_FULL}\""
   "$<$<STREQUAL:$<CONFIGURATION>,Release>:-DNDEBUG>"
   "$<$<STREQUAL:$<CONFIGURATION>,Release>:-DQT_NO_DEBUG>"
-  ${Sword_CFLAGS_OTHER}
 )
 IF("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     SET(BIBLETIME_MOC_OPTIONS "-DNDEBUG")
@@ -171,7 +170,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/src    # so that include paths like "frontend/..." work
     ${CLucene_INCLUDE_DIR}            #CLucene headers
     ${CLucene_LIBRARY_DIR}            #CLucene/clucene-config.h
-    ${Sword_INCLUDE_DIRS}
+    ${Swordxx_INCLUDE_DIRS}
 )
 # Macros used by BTUITranslationLink.cmake amd BTUITranslation.cmake
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BTTranslationMacros.cmake")
@@ -215,7 +214,7 @@ ENDIF()
 TARGET_LINK_LIBRARIES("bibletime"
     bibletime_common
     ${CLucene_LIBRARY}
-    ${Sword_LDFLAGS}
+    ${Swordxx_LIBRARIES}
 )
 
 IF(${BIBLETIME_FRONTEND} STREQUAL "MOBILE")
@@ -245,11 +244,11 @@ ELSE()
 ENDIF()
 
 SET_TARGET_PROPERTIES("bibletime" PROPERTIES
-                      COMPILE_FLAGS "${Sword_CFLAGS_OTHER} ${BibleTime_CXXFLAGS}"
+                      COMPILE_FLAGS "${BibleTime_CXXFLAGS}"
                       LINK_FLAGS "${BibleTime_LDFLAGS}")
 
 SET_TARGET_PROPERTIES("bibletime_common" PROPERTIES
-                      COMPILE_FLAGS "${Sword_CFLAGS_OTHER} ${BibleTime_CXXFLAGS}"
+                      COMPILE_FLAGS "${BibleTime_CXXFLAGS}"
                       LINK_FLAGS "${BibleTime_LDFLAGS}")
 
 IF(Qt5Core_VERSION VERSION_LESS 5.3.0)

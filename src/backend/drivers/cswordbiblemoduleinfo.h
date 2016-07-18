@@ -19,15 +19,15 @@
 
 
 /**
-  \brief Implementation for Sword Bibles.
+  \brief Implementation for Sword++ Bibles.
 
-  This is the CModuleInfo imlementation for Bible modules managed by Sword.
+  This is the CModuleInfo imlementation for Bible modules managed by Sword++.
 */
 class CSwordBibleModuleInfo: public CSwordModuleInfo {
         Q_OBJECT
 
     public: /* Methods: */
-        CSwordBibleModuleInfo(sword::SWModule & module,
+        CSwordBibleModuleInfo(swordxx::SWModule & module,
                               CSwordBackend & backend,
                               ModuleType type = Bible);
 

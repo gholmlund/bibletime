@@ -11,13 +11,11 @@
 
 #include <QDebug>
 #include <QStringList>
+#include <swordxx/localemgr.h>
+#include <swordxx/swmodule.h>
 #include "../../util/btassert.h"
 #include "../drivers/cswordbiblemoduleinfo.h"
 #include "../drivers/cswordcommentarymoduleinfo.h"
-
-// Sword includes:
-#include <swmodule.h>
-#include <localemgr.h>
 
 
 CSwordVerseKey::CSwordVerseKey(const CSwordModuleInfo *module)
@@ -65,7 +63,7 @@ void CSwordVerseKey::setModule(const CSwordModuleInfo *newModule) {
 
     if(strcmp(getVersificationSystem(), newVersification)) {
         /// Remap key position to new versification
-        sword::VerseKey oldKey(*this);
+        swordxx::VerseKey oldKey(*this);
 
         setVersificationSystem(newVersification);
 
@@ -151,7 +149,7 @@ bool CSwordVerseKey::setKey(const char *newKey) {
         VerseKey vk(newKey, newKey, getVersificationSystem());
         setLowerBound(vk.getLowerBound());
         setUpperBound(vk.getUpperBound());
-        setPosition(sword::TOP);
+        setPosition(swordxx::TOP);
     } else {
         clearBounds();
         positionFrom(newKey);

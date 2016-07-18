@@ -152,7 +152,7 @@ void CDisplayWindow::storeProfileSettings(QString const & windowGroup) const {
 
     // Save current key:
     if (CSwordKey * const k = key()) {
-        if (sword::VerseKey * const vk = dynamic_cast<sword::VerseKey *>(k)) {
+        if (swordxx::VerseKey * const vk = dynamic_cast<swordxx::VerseKey *>(k)) {
             // Save keys in english only:
             const QString oldLang = QString::fromLatin1(vk->getLocale());
             vk->setLocale("en");
@@ -267,7 +267,7 @@ void CDisplayWindow::initActions() {
 
 /** Refresh the settings of this window. */
 void CDisplayWindow::reload(CSwordBackend::SetupChangedReason) {
-    { // First make sure all used Sword modules are still present:
+    { // First make sure all used Sword++ modules are still present:
         CSwordBackend & backend = *(CSwordBackend::instance());
         QMutableStringListIterator it(m_modules);
         while (it.hasNext())
@@ -335,7 +335,6 @@ void CDisplayWindow::setKeyChooser( CKeyChooser* ck ) {
     m_keyChooser = ck;
 }
 
-/** Sets the new sword key. */
 void CDisplayWindow::setKey( CSwordKey* key ) {
     BT_ASSERT(key);
     m_swordKey = key;

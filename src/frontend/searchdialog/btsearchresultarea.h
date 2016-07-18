@@ -79,7 +79,7 @@ class StrongsResult {
 class StrongsResultList: public QList<StrongsResult> {
     public: /* Methods: */
         StrongsResultList(const CSwordModuleInfo *module,
-                          const sword::ListKey &results,
+                          const swordxx::ListKey &results,
                           const QString &strongsNumber);
 
     private: /* Methods: */
