@@ -24,7 +24,6 @@
 #include <QString>
 #include <swordxx/keys/listkey.h>
 #include <swordxx/swmodule.h>
-#include <swordxx/swsearchable.h>
 #include <swordxx/version.h>
 
 
