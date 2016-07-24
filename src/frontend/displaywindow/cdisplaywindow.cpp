@@ -166,6 +166,9 @@ void CDisplayWindow::storeProfileSettings(QString const & windowGroup) const {
     // Save list of modules:
     conf.setSessionValue("modules", m_modules);
 
+    // Default for "not a write window":
+    conf.setSessionValue("writeWindowType", int(0));
+
     conf.endGroup();
 }
 
@@ -238,7 +241,7 @@ void CDisplayWindow::insertKeyboardActions( BtActionCollection* a ) {
 void CDisplayWindow::initActions() {
     BtActionCollection* ac = actionCollection();
 
-    CDisplayWindow::insertKeyboardActions(ac);
+    insertKeyboardActions(ac);
 
     namespace DWG = CResMgr::displaywindows::general;
     initAction(DWG::search::actionName,
